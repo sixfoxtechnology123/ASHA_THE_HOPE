@@ -9,6 +9,7 @@ const departmentRoutes = require('./routes/departmentRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const doctorScheduleRoutes = require('./routes/doctorScheduleRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
+const patientRoutes = require('./routes/patientRoutes');
 
 const app = express();
 app.use(cors());
@@ -21,6 +22,7 @@ app.use('/api/master/department', departmentRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/doctor-schedules', doctorScheduleRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/patients', patientRoutes);
 
 // DB Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/asha_hope')

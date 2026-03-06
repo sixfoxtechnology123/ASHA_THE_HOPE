@@ -11,6 +11,7 @@ import UserManagement from "./pages/UserManagement";
 import DoctorRegistration from "./pages/DoctorRegistration";
 import DoctoreSchedule from "./pages/DoctoreSchedule";
 import AppointmentBooking from "./pages/AppointmentBooking";
+import PatientsRegistration from "./pages/PatientsRegistration";
 import DoctorSpecialization from "./master/DoctorSpecialization";
 import DoctorSpecializationList from "./master/DoctorSpecializationList";
 import DepartmentList from "./pages/DepartmentList";
@@ -41,6 +42,7 @@ export default function App() {
                     <Route path="/DoctorRegistration" element={<DoctorRegistration />} />
                     <Route path="/DoctoreSchedule" element={<DoctoreSchedule />} />
                     <Route path="/AppointmentBooking" element={<AppointmentBooking />} />
+                    <Route path="/PatientsRegistration" element={<PatientsRegistration />} />
                     <Route path="/DoctorSpecialization" element={<DoctorSpecialization />} />
                     <Route path="/DoctorSpecializationList" element={<DoctorSpecializationList />} />
                     <Route path="/DepartmentList" element={<DepartmentList/>} />

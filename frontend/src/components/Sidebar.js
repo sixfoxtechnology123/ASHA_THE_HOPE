@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { UserCog, Activity, LogOut, Menu, X, Stethoscope, ChevronDown, ChevronRight, Layers, CalendarDays } from 'lucide-react';
+import { UserCog, Activity, LogOut, Menu, X, Stethoscope, ChevronDown, ChevronRight, Layers, CalendarDays, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Sidebar = () => {
@@ -103,6 +103,7 @@ const Sidebar = () => {
 
           {/* {navLink('/UserManagement', 'User Management', <UserCog size={20} />)} */}
           {navLink('/DoctorRegistration', 'Doctor Registration', <Stethoscope size={20} />)}
+          {navLink('/PatientsRegistration', 'Patients Registration', <UserPlus size={20} />)}
           {navLink('/DoctoreSchedule', 'Doctore Schedule', <CalendarDays size={20} />)}
           {navLink('/AppointmentBooking', 'Appointment Booking', <CalendarDays size={20} />)}
         </nav>

@@ -397,7 +397,7 @@ const AppointmentBooking = () => {
   return (
     <div className="min-h-screen bg-sky-50 font-sans font-semibold">
       <header className="p-6 sticky top-0 z-20 bg-sky-50/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-[24px] shadow-sm border-b-4 border-sky-400">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-3 rounded-[24px] shadow-sm border-b-4 border-sky-400">
           <div className="flex items-center gap-5">
             <div className="w-14 h-14 bg-sky-500 rounded-2xl text-white flex items-center justify-center shadow-lg shadow-sky-200">
               <CalendarDays size={30} />

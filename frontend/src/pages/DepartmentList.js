@@ -80,7 +80,7 @@ const DepartmentList = () => {
       
       <div className="relative z-10">
         <header className="p-6">
-          <div className="max-w-7xl mx-auto flex justify-between items-center bg-white p-2 rounded-[24px] shadow-sm border border-sky-100">
+          <div className="max-w-7xl mx-auto flex justify-between items-center bg-white p-3 rounded-[24px] shadow-sm border border-sky-100">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 bg-sky-500 text-white flex items-center justify-center rounded-2xl shadow-lg shadow-sky-100">
                 <Layers size={18} />

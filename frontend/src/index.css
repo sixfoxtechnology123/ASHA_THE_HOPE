@@ -13,6 +13,5 @@ body,
 *,
 *::before,
 *::after {
-  font-style: normal !important;
-  font-weight: 400 !important;
+  font-style: normal;
 }
