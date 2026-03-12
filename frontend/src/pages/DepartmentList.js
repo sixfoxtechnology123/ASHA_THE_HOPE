@@ -74,23 +74,20 @@ const DepartmentList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-sky-50 relative overflow-hidden font-sans">
-      {/* Background Mesh Effect */}
-      <div className="absolute top-0 -left-20 w-96 h-96 bg-sky-100 rounded-full blur-[100px] opacity-60"></div>
-      
+    <div className="page-shell">
       <div className="relative z-10">
-        <header className="p-6">
-          <div className="max-w-7xl mx-auto flex justify-between items-center bg-white p-3 rounded-[24px] shadow-sm border border-sky-100">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-sky-500 text-white flex items-center justify-center rounded-2xl shadow-lg shadow-sky-100">
+        <header className="page-header">
+          <div className="header-card">
+            <div className="header-row">
+              <div className="header-icon" style={{ width: '2.5rem', height: '2.5rem' }}>
                 <Layers size={18} />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-slate-800 uppercase tracking-tight">Department Master</h1>
-                <p className="text-xs text-sky-600 font-medium uppercase tracking-widest">Hospital Unit Management</p>
+                <h1 className="header-title">Department Master</h1>
+                <p className="header-subtitle">Hospital Unit Management</p>
               </div>
             </div>
-            <button onClick={handleAddNew} className="flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-6 py-2 rounded-2xl font-medium text-sm transition-all shadow-lg shadow-sky-200">
+            <button onClick={handleAddNew} className="btn-primary">
               <Plus size={18} /> Add Department
             </button>
           </div>
@@ -100,34 +97,34 @@ const DepartmentList = () => {
           <div className="max-w-7xl mx-auto space-y-4">
             {/* Search Bar */}
             <div className="relative">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-sky-400" size={18} />
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="text" placeholder="Search departments..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-6 py-2 bg-white border border-sky-100 rounded-2xl shadow-sm outline-none focus:ring-2 ring-sky-200 uppercase text-sm"
+                className="search-input"
               />
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-[24px] shadow-sm border border-sky-100 overflow-hidden">
+            <div className="table-wrap">
               <table className="w-full text-left">
-                <thead className="bg-slate-900 text-white">
-                  <tr className="text-[10px] uppercase tracking-widest">
+                <thead>
+                  <tr className="table-head">
                     <th className="p-2 px-8">Dept ID</th>
                     <th className="p-2">Department Name</th>
                     <th className="p-2 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-sky-50">
+                <tbody className="divide-y divide-slate-100">
                   {loading ? (
                     <tr><td colSpan="3" className="p-12 text-center text-slate-400 font-medium">Syncing...</td></tr>
                   ) : filteredData.length > 0 ? (
                     filteredData.map((dept) => (
-                      <tr key={dept._id} className="hover:bg-sky-50/50 transition-colors">
-                        <td className="p-1 px-8 font-semibold text-sky-600 text-sm uppercase">{dept.deptId}</td>
+                      <tr key={dept._id} className="table-row hover:bg-slate-50/50 transition-colors">
+                        <td className="p-1 px-8 font-semibold text-[color:var(--brand-600)] text-sm uppercase">{dept.deptId}</td>
                         <td className="p-1 font-medium text-slate-700 uppercase text-sm">{dept.deptName}</td>
                         <td className="p-1 flex justify-center gap-3">
-                          <button onClick={() => handleEdit(dept)} className="p-2 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-600 hover:text-white transition-all"><Edit size={16}/></button>
-                          <button onClick={() => handleDelete(dept._id)} className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16}/></button>
+                          <button onClick={() => handleEdit(dept)} className="icon-btn"><Edit size={16}/></button>
+                          <button onClick={() => handleDelete(dept._id)} className="danger-btn"><Trash2 size={16}/></button>
                         </td>
                       </tr>
                     ))
@@ -148,23 +145,23 @@ const DepartmentList = () => {
           <form onSubmit={handleSubmit} className="relative bg-white w-full max-w-md px-8 py-5 rounded-[40px] shadow-2xl animate-in zoom-in duration-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-slate-800 uppercase tracking-tight">{editId ? 'Edit Dept' : 'New Dept'}</h2>
-              <button type="button" onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-sky-50 rounded-full text-slate-400"><X size={20}/></button>
+              <button type="button" onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full text-slate-400"><X size={20}/></button>
             </div>
             <div className="space-y-8">
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-sky-600 uppercase tracking-widest flex items-center gap-2"> Assigned ID</label>
-                <input type="text" value={formData.deptId} readOnly className="w-full py-3 bg-sky-50 border-b-2 border-sky-100 font-semibold text-base text-slate-700 px-4 rounded-xl outline-none" />
+                <label className="field-label flex items-center gap-2"> Assigned ID</label>
+                <input type="text" value={formData.deptId} readOnly className="input-field bg-slate-50" />
               </div>
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-sky-600 uppercase tracking-widest">Department Name</label>
+                <label className="field-label">Department Name</label>
                 <input 
                   required type="text" value={formData.deptName} autoFocus
                   onChange={(e) => setFormData({...formData, deptName: e.target.value.toUpperCase()})}
                   placeholder="E.G. RADIOLOGY"
-                  className="w-full py-2 border-b-2 border-slate-100 font-semibold text-base outline-none focus:border-sky-500 bg-transparent uppercase"
+                  className="input-field uppercase"
                 />
               </div>
-              <button disabled={isSaving} className="w-full py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-2xl shadow-lg flex items-center justify-center gap-3 transition-all active:scale-95">
+              <button disabled={isSaving} className="w-full py-2 btn-primary justify-center active:scale-95">
                 {isSaving ? <Loader2 className="animate-spin" size={20}/> : <Save size={20}/>}
                 {editId ? 'UPDATE CHANGES' : 'SAVE DEPARTMENT'}
               </button>

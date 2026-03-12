@@ -176,29 +176,29 @@ const DoctorRegistration = () => {
   });
 
   return (
-    <div className="min-h-screen bg-sky-50 font-sans font-semibold">
-      <header className="p-6 sticky top-0 z-20 bg-sky-50/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-3 rounded-[24px] shadow-sm border-b-4 border-sky-400">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-sky-500 rounded-2xl text-white flex items-center justify-center shadow-lg shadow-sky-200">
+    <div className="page-shell">
+      <header className="page-header">
+        <div className="header-card">
+          <div className="header-row">
+            <div className="header-icon">
               <Stethoscope size={30} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Doctor Onboarding</h1>
-              <p className="text-sm text-sky-600 font-semibold uppercase tracking-widest mt-0.5">Asha Hope Medical Records</p>
+              <h1 className="header-title">Doctor Onboarding</h1>
+              <p className="header-subtitle">Asha Hope Medical Records</p>
             </div>
           </div>
 
           {showForm ? (
-            <div className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm tracking-wider flex items-center gap-3">
-              <ShieldCheck size={18} className="text-sky-400" />
+            <div className="btn-secondary">
+              <ShieldCheck size={18} className="text-white/80" />
               ID: {formData.doctorId || 'SYNCING...'}
             </div>
           ) : (
             <button
               type="button"
               onClick={openAddForm}
-              className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-2xl font-bold text-sm tracking-wider flex items-center gap-2 transition-all"
+              className="btn-primary"
             >
               <Plus size={16} />
               ADD DOCTOR
@@ -208,34 +208,34 @@ const DoctorRegistration = () => {
       </header>
       <main className="px-6 pb-12">
         {!showForm ? (
-          <div className="max-w-7xl mx-auto bg-white rounded-[32px] p-8 shadow-md border border-sky-100">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 border-b border-sky-50 pb-3">
+          <div className="card p-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 border-b border-slate-100 pb-3">
               <div className="flex items-center gap-3">
-                <List className="text-sky-500" size={20} />
-                <h2 className="text-sm font-bold text-black uppercase tracking-[0.1em]">Registered Doctors List</h2>
+                <List className="text-[color:var(--brand-500)]" size={20} />
+                <h2 className="card-title">Registered Doctors List</h2>
               </div>
               <div className="relative w-full md:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-sky-400" size={16} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by Doctor Name or ID"
-                  className="w-full py-2.5 pl-10 pr-4 border border-sky-100 rounded-xl outline-none focus:border-sky-500 text-sm font-semibold uppercase"
+                  className="search-input"
                 />
               </div>
             </div>
 
             {filteredDoctors.length === 0 ? (
-              <div className="py-12 text-center text-slate-500 font-bold uppercase">
+              <div className="py-12 text-center text-slate-500 font-semibold uppercase">
                 {doctors.length === 0 ? 'No doctors registered yet.' : 'No doctor found for this search.'}
               </div>
             ) : (
-              <div className="border border-sky-100 rounded-2xl overflow-hidden">
+              <div className="table-wrap">
                 <div className="max-h-[540px] overflow-auto">
                 <table className="w-full min-w-[1050px]">
                   <thead>
-                    <tr className="text-left text-xs font-bold uppercase tracking-wider text-sky-600 border-b border-sky-100 bg-white sticky top-0 z-10">
+                    <tr className="table-head sticky top-0 z-10">
                       <th className="py-3">Doctor ID</th>
                       <th className="py-3">Name</th>
                       <th className="py-3">Department</th>
@@ -248,14 +248,14 @@ const DoctorRegistration = () => {
                   </thead>
                   <tbody>
                     {filteredDoctors.map((doctor) => (
-                      <tr key={doctor._id} className="border-b border-sky-50 text-sm text-slate-700 font-semibold">
-                        <td className="py-3 font-bold">{doctor.doctorId}</td>
+                      <tr key={doctor._id} className="table-row">
+                        <td className="py-3 font-semibold text-[color:var(--brand-600)]">{doctor.doctorId}</td>
                         <td className="py-3 font-semibold">{doctor.doctorName}</td>
                         <td className="py-3 font-semibold">{doctor.department}</td>
                         <td className="py-3 font-semibold">{doctor.specialization}</td>
                         <td className="py-3 font-semibold">{doctor.mobile}</td>
                         <td className="py-3">
-                          <span className={`px-2 py-1 rounded-lg text-xs font-bold ${doctor.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                          <span className={doctor.status === 'Active' ? 'badge-success' : 'badge-danger'}>
                             {doctor.status}
                           </span>
                         </td>
@@ -265,7 +265,7 @@ const DoctorRegistration = () => {
                             <button
                               type="button"
                               onClick={() => handleEdit(doctor)}
-                              className="p-2 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-600 hover:text-white transition-all"
+                              className="icon-btn"
                               title="Edit"
                             >
                               <Edit size={16} />
@@ -273,7 +273,7 @@ const DoctorRegistration = () => {
                             <button
                               type="button"
                               onClick={() => handleDelete(doctor)}
-                              className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
+                              className="danger-btn"
                               title="Delete"
                             >
                               <Trash2 size={16} />
@@ -290,20 +290,20 @@ const DoctorRegistration = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 bg-white rounded-[32px] p-8 md:p-7 shadow-md border border-sky-100 relative overflow-hidden">
+            <div className="lg:col-span-8 card p-8 md:p-7 relative overflow-hidden">
               <div className="absolute -top-10 -right-10 opacity-5 pointer-events-none">
-                <Stethoscope size={250} className="text-sky-900" />
+                <Stethoscope size={250} className="text-slate-900" />
               </div>
 
-              <div className="flex items-center justify-between mb-5 border-b border-sky-50 pb-2 relative z-10">
+              <div className="flex items-center justify-between mb-5 border-b border-slate-100 pb-2 relative z-10">
                 <div className="flex items-center gap-3">
-                  <User className="text-sky-500" size={20} />
-                  <h2 className="text-sm font-bold text-black uppercase tracking-[0.1em]">Personnel Details</h2>
+                  <User className="text-[color:var(--brand-500)]" size={20} />
+                  <h2 className="card-title">Personnel Details</h2>
                 </div>
                 <button
                   type="button"
                   onClick={closeAddForm}
-                  className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors"
                 >
                   <ArrowLeft size={14} />
                   BACK TO LIST
@@ -319,13 +319,13 @@ const DoctorRegistration = () => {
                 <InputField label="Email Address" name="email" value={formData.email} onChange={handleChange} type="email" placeholder="doctor@asha.com" />
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-semibold text-sky-600 uppercase tracking-widest">Department</label>
+                  <label className="field-label">Department</label>
                   <select
                     required
                     name="department"
                     value={formData.department}
                     onChange={handleChange}
-                    className="w-full py-3 border-b-2 border-sky-100 font-medium text-slate-700 outline-none focus:border-sky-500 bg-transparent cursor-pointer uppercase text-sm"
+                    className="select-field uppercase"
                   >
                     <option value="">-- SELECT DEPARTMENT --</option>
                     {departments.map((dept) => (
@@ -339,25 +339,25 @@ const DoctorRegistration = () => {
             </div>
 
             <div className="lg:col-span-4 space-y-6">
-              <div className="bg-white rounded-[32px] p-8 shadow-md border border-sky-100">
-                <div className="flex items-center gap-3 mb-2 border-b border-sky-50 pb-5">
-                  <CreditCard className="text-sky-500" size={20} />
-                  <h2 className="text-sm font-bold text-black uppercase tracking-[0.2em]">Revenue Share</h2>
+              <div className="card p-8">
+                <div className="flex items-center gap-3 mb-2 border-b border-slate-100 pb-5">
+                  <CreditCard className="text-[color:var(--brand-500)]" size={20} />
+                  <h2 className="card-title">Revenue Share</h2>
                 </div>
 
                 <div className="space-y-4">
                   <InputField label="Fee (INR)" name="consultationFee" value={formData.consultationFee} onChange={handleChange} type="number" />
 
                   <div className="flex flex-col gap-3">
-                    <label className="text-[11px] font-bold text-sky-600 tracking-widest uppercase text-center mb-1">Payment Model</label>
-                    <div className="flex p-1.5 bg-sky-50 rounded-2xl border border-sky-100">
+                    <label className="field-label text-center">Payment Model</label>
+                    <div className="flex p-1.5 bg-slate-50 rounded-2xl border border-slate-200">
                       {['Percentage', 'Fixed'].map(type => (
                         <button
                           key={type}
                           type="button"
                           onClick={() => handleChange({ target: { name: 'revenueShareType', value: type } })}
-                          className={`flex-1 py-3 rounded-xl text-[11px] font-bold transition-all ${
-                            formData.revenueShareType === type ? 'bg-sky-500 text-white shadow-md' : 'text-sky-400 hover:text-sky-600'
+                          className={`flex-1 py-3 rounded-xl text-[11px] font-semibold transition-all ${
+                            formData.revenueShareType === type ? 'bg-[color:var(--brand-500)] text-white shadow-md' : 'text-slate-500 hover:text-[color:var(--brand-600)]'
                           }`}
                         >
                           {type}
@@ -374,17 +374,17 @@ const DoctorRegistration = () => {
               </div>
 
               <div className="bg-slate-900 rounded-[32px] p-8 shadow-xl text-white">
-                <label className="text-[11px] font-bold uppercase tracking-[0.3em] mb-6 block text-center opacity-60">Status</label>
+                <label className="text-[11px] font-semibold uppercase tracking-[0.3em] mb-6 block text-center opacity-60">Status</label>
 
                 <div className="flex gap-4 mb-8">
-                  <StatusBtn label="ACTIVE" value="Active" current={formData.status} onChange={handleChange} activeClass="bg-sky-500" />
+                  <StatusBtn label="ACTIVE" value="Active" current={formData.status} onChange={handleChange} activeClass="bg-[color:var(--brand-500)]" />
                   <StatusBtn label="INACTIVE" value="Inactive" current={formData.status} onChange={handleChange} activeClass="bg-slate-700" />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-4 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-sky-500/20 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                  className="w-full py-4 btn-primary justify-center active:scale-95 disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin" /> : <Save size={22} />}
                   {editingDoctorId ? 'UPDATE DOCTOR' : 'REGISTER DOCTOR'}
@@ -400,11 +400,11 @@ const DoctorRegistration = () => {
 
 const InputField = ({ label, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="font-bold text-sky-600 uppercase">{label}</label>
+    <label className="field-label">{label}</label>
     <input
       required
       {...props}
-      className="w-full py-2 border-b-2 border-sky-50 font-semibold text-slate-700 outline-none focus:border-sky-500 bg-transparent transition-all uppercase placeholder:font-semibold placeholder:text-slate-300"
+      className="input-field uppercase placeholder:font-semibold placeholder:text-slate-300"
     />
   </div>
 );
@@ -413,7 +413,7 @@ const StatusBtn = ({ label, value, current, onChange, activeClass }) => (
   <button
     type="button"
     onClick={() => onChange({ target: { name: 'status', value: value } })}
-    className={`flex-1 py-3 rounded-xl text-[10px] font-bold border border-slate-700 transition-all ${
+    className={`flex-1 py-3 rounded-xl text-[10px] font-semibold border border-slate-700 transition-all ${
       current === value ? `${activeClass} text-white border-transparent shadow-lg` : 'text-black hover:text-white'
     }`}
   >

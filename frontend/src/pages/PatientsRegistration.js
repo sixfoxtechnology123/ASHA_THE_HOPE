@@ -45,6 +45,34 @@ const PatientsRegistration = () => {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState(getInitialFormData());
+  const [activeSection, setActiveSection] = useState('details');
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [visitHistory, setVisitHistory] = useState([]);
+  const [billingHistory, setBillingHistory] = useState([]);
+  const [pharmacyHistory, setPharmacyHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [doctors, setDoctors] = useState([]);
+  const [visitForm, setVisitForm] = useState({
+    visitDate: '',
+    doctorId: '',
+    department: '',
+    status: 'Scheduled',
+    prescriptionUrl: ''
+  });
+  const [billingForm, setBillingForm] = useState({
+    invoiceNo: '',
+    billDate: '',
+    doctorId: '',
+    department: '',
+    amount: '',
+    paymentStatus: 'Unpaid'
+  });
+  const [pharmacyForm, setPharmacyForm] = useState({
+    billNo: '',
+    medicinesPurchased: '',
+    amount: ''
+  });
+  const [savingHistory, setSavingHistory] = useState(false);
   const isEditMode = Boolean(editingPatientId);
 
   const fetchNextPatientId = async () => {
@@ -99,6 +127,21 @@ const PatientsRegistration = () => {
     fetchDepartments();
   }, []);
 
+  const fetchDoctors = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/doctors/all`);
+      if (res.data.success) {
+        setDoctors(res.data.data || []);
+      }
+    } catch (err) {
+      toast.error('FAILED TO LOAD DOCTORS');
+    }
+  };
+
+  useEffect(() => {
+    fetchDoctors();
+  }, []);
+
   useEffect(() => {
     setFormData((prev) => ({ ...prev, age: calculateAge(prev.dob) }));
   }, [formData.dob]);
@@ -111,6 +154,8 @@ const PatientsRegistration = () => {
   };
 
   const openAddForm = async () => {
+    setActiveSection('details');
+    setSelectedPatient(null);
     setEditingPatientId(null);
     setFormData(getInitialFormData());
     setShowForm(true);
@@ -121,10 +166,13 @@ const PatientsRegistration = () => {
     setShowForm(false);
     setEditingPatientId(null);
     setFormData(getInitialFormData());
+    setActiveSection('details');
     await fetchNextPatientId();
   };
 
   const handleEdit = (patient) => {
+    setSelectedPatient(patient);
+    setActiveSection('details');
     setEditingPatientId(patient._id);
     setFormData({
       patientId: patient.patientId || '',
@@ -154,6 +202,7 @@ const PatientsRegistration = () => {
       if (res.data.success) {
         toast.success('PATIENT DELETED');
         await fetchPatients();
+        if (selectedPatient?._id === patient._id) setSelectedPatient(null);
       } else {
         toast.error('DELETE FAILED');
       }
@@ -212,17 +261,187 @@ const PatientsRegistration = () => {
     );
   }, [patients, searchTerm]);
 
+  const doctorMap = useMemo(() => {
+    return doctors.reduce((acc, doc) => {
+      acc[doc.doctorId] = doc;
+      return acc;
+    }, {});
+  }, [doctors]);
+
+  const loadHistory = async (type, patientMongoId) => {
+    if (!patientMongoId) return;
+    setLoadingHistory(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/patients/${patientMongoId}/${type}-history`);
+      if (res.data.success) {
+        if (type === 'visit') setVisitHistory(res.data.data || []);
+        if (type === 'billing') setBillingHistory(res.data.data || []);
+        if (type === 'pharmacy') setPharmacyHistory(res.data.data || []);
+      }
+    } catch (err) {
+      toast.error('FAILED TO LOAD HISTORY');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedPatient) return;
+    if (activeSection === 'visit') loadHistory('visit', selectedPatient._id);
+    if (activeSection === 'billing') loadHistory('billing', selectedPatient._id);
+    if (activeSection === 'pharmacy') loadHistory('pharmacy', selectedPatient._id);
+  }, [activeSection, selectedPatient]);
+
+  const resetVisitForm = () =>
+    setVisitForm({ visitDate: '', doctorId: '', department: '', status: 'Scheduled', prescriptionUrl: '' });
+  const resetBillingForm = () =>
+    setBillingForm({ invoiceNo: '', billDate: '', doctorId: '', department: '', amount: '', paymentStatus: 'Unpaid' });
+  const resetPharmacyForm = () =>
+    setPharmacyForm({ billNo: '', medicinesPurchased: '', amount: '' });
+
+  const handleVisitChange = (e) => {
+    const { name, value } = e.target;
+    setVisitForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleBillingChange = (e) => {
+    const { name, value } = e.target;
+    setBillingForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePharmacyChange = (e) => {
+    const { name, value } = e.target;
+    setPharmacyForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleVisitDoctorChange = (e) => {
+    const doctorId = e.target.value;
+    const doctor = doctorMap[doctorId];
+    setVisitForm((prev) => ({
+      ...prev,
+      doctorId,
+      department: doctor?.department || prev.department
+    }));
+  };
+
+  const handleBillingDoctorChange = (e) => {
+    const doctorId = e.target.value;
+    const doctor = doctorMap[doctorId];
+    setBillingForm((prev) => ({
+      ...prev,
+      doctorId,
+      department: doctor?.department || prev.department,
+      amount: prev.amount ? prev.amount : doctor?.consultationFee ? String(doctor.consultationFee) : ''
+    }));
+  };
+
+  const submitVisitHistory = async (e) => {
+    e.preventDefault();
+    if (!selectedPatient) return toast.error('SELECT A PATIENT');
+    if (!visitForm.visitDate || !visitForm.doctorId) return toast.error('VISIT DATE AND DOCTOR REQUIRED');
+    setSavingHistory(true);
+    try {
+      const payload = {
+        visitDate: visitForm.visitDate,
+        doctorId: visitForm.doctorId,
+        doctorName: doctorMap[visitForm.doctorId]?.doctorName || '',
+        department: visitForm.department || doctorMap[visitForm.doctorId]?.department || '',
+        status: visitForm.status,
+        prescriptionUrl: visitForm.prescriptionUrl
+      };
+      const res = await axios.post(`${API_BASE_URL}/api/patients/${selectedPatient._id}/visit-history`, payload);
+      if (res.data.success) {
+        toast.success('VISIT HISTORY SAVED');
+        resetVisitForm();
+        await loadHistory('visit', selectedPatient._id);
+      } else {
+        toast.error('SAVE FAILED');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'SAVE FAILED');
+    } finally {
+      setSavingHistory(false);
+    }
+  };
+
+  const submitBillingHistory = async (e) => {
+    e.preventDefault();
+    if (!selectedPatient) return toast.error('SELECT A PATIENT');
+    if (!billingForm.invoiceNo || !billingForm.billDate) return toast.error('INVOICE NO AND DATE REQUIRED');
+    setSavingHistory(true);
+    try {
+      const payload = {
+        invoiceNo: billingForm.invoiceNo,
+        billDate: billingForm.billDate,
+        doctorId: billingForm.doctorId,
+        doctorName: billingForm.doctorId ? doctorMap[billingForm.doctorId]?.doctorName || '' : '',
+        department: billingForm.department || (billingForm.doctorId ? doctorMap[billingForm.doctorId]?.department || '' : ''),
+        amount: billingForm.amount ? Number(billingForm.amount) : 0,
+        paymentStatus: billingForm.paymentStatus
+      };
+      const res = await axios.post(`${API_BASE_URL}/api/patients/${selectedPatient._id}/billing-history`, payload);
+      if (res.data.success) {
+        toast.success('BILLING HISTORY SAVED');
+        resetBillingForm();
+        await loadHistory('billing', selectedPatient._id);
+      } else {
+        toast.error('SAVE FAILED');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'SAVE FAILED');
+    } finally {
+      setSavingHistory(false);
+    }
+  };
+
+  const submitPharmacyHistory = async (e) => {
+    e.preventDefault();
+    if (!selectedPatient) return toast.error('SELECT A PATIENT');
+    if (!pharmacyForm.billNo || !pharmacyForm.medicinesPurchased) return toast.error('BILL NO AND MEDICINES REQUIRED');
+    setSavingHistory(true);
+    try {
+      const payload = {
+        billNo: pharmacyForm.billNo,
+        medicinesPurchased: pharmacyForm.medicinesPurchased,
+        amount: pharmacyForm.amount ? Number(pharmacyForm.amount) : 0
+      };
+      const res = await axios.post(`${API_BASE_URL}/api/patients/${selectedPatient._id}/pharmacy-history`, payload);
+      if (res.data.success) {
+        toast.success('PHARMACY HISTORY SAVED');
+        resetPharmacyForm();
+        await loadHistory('pharmacy', selectedPatient._id);
+      } else {
+        toast.error('SAVE FAILED');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'SAVE FAILED');
+    } finally {
+      setSavingHistory(false);
+    }
+  };
+
+  const historyEmptyState = (message) => (
+    <div className="py-12 text-center text-slate-500 font-bold uppercase">{message}</div>
+  );
+
+  const sectionTabs = [
+    { id: 'details', label: 'Patients Details' },
+    { id: 'visit', label: 'Visit History' },
+    { id: 'billing', label: 'Billing History' },
+    { id: 'pharmacy', label: 'Pharmacy History' }
+  ];
+
   return (
-    <div className="min-h-screen bg-sky-50 font-sans font-semibold">
-      <header className="p-6 sticky top-0 z-20 bg-sky-50/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-3 rounded-[24px] shadow-sm border-b-4 border-sky-400">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-sky-500 rounded-2xl text-white flex items-center justify-center shadow-lg shadow-sky-200">
+    <div className="page-shell">
+      <header className="page-header">
+        <div className="header-card">
+          <div className="header-row">
+            <div className="header-icon">
               <UserPlus size={30} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Patients Registration</h1>
-              <p className="text-sm text-sky-600 font-semibold uppercase tracking-widest mt-0.5">Create New Patient Profile</p>
+              <h1 className="header-title">Patients Registration</h1>
+              <p className="header-subtitle">Create New Patient Profile</p>
             </div>
           </div>
 
@@ -230,7 +449,7 @@ const PatientsRegistration = () => {
             <button
               type="button"
               onClick={openAddForm}
-              className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2 rounded-2xl font-bold text-sm tracking-wider flex items-center gap-2 transition-all"
+              className="btn-primary"
             >
               <Plus size={16} />
               ADD PATIENT
@@ -239,7 +458,7 @@ const PatientsRegistration = () => {
             <button
               type="button"
               onClick={closeForm}
-              className="bg-slate-900 text-white px-6 py-2 rounded-2xl font-bold text-sm tracking-wider flex items-center gap-2"
+              className="btn-secondary"
             >
               <ArrowLeft size={16} />
               BACK TO LIST
@@ -249,37 +468,80 @@ const PatientsRegistration = () => {
       </header>
 
       <main className="px-6 pb-12">
-        {!showForm ? (
-          <div className="max-w-7xl mx-auto bg-white rounded-[32px] p-4 shadow-md border border-sky-100">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-3 border-b border-sky-50 pb-3">
+        {isEditMode && (
+          <div className="max-w-7xl mx-auto mb-5">
+            <div className="bg-white rounded-[22px] p-2 shadow-sm border border-slate-200 flex flex-wrap gap-2">
+              {sectionTabs.map((tab) => {
+                const isActive = activeSection === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveSection(tab.id)}
+                    className={`px-4 py-2 rounded-2xl text-sm font-bold tracking-wide transition-all ${
+                      isActive
+                        ? 'bg-[color:var(--brand-500)] text-white shadow-md'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {isEditMode && selectedPatient && (
+          <div className="max-w-7xl mx-auto mb-4">
+            <div className="bg-white border border-slate-200 rounded-[18px] px-4 py-3 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="text-sm text-slate-700">
+                <span className="font-bold text-slate-800">Selected Patient:</span>{' '}
+                {selectedPatient.fullName || '-'} ({selectedPatient.patientId})
+                {selectedPatient.mobileNumber ? ` | ${selectedPatient.mobileNumber}` : ''}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedPatient(null)}
+                className="btn-ghost"
+              >
+                Clear Selection
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!isEditMode && !showForm ? (
+          <div className="card">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-3 border-b border-slate-100 pb-3">
               <div className="flex items-center gap-3">
-                <List className="text-sky-500" size={20} />
-                <h2 className="text-sm font-bold text-black uppercase tracking-[0.1em]">Patients List</h2>
+                <List className="text-[color:var(--brand-500)]" size={20} />
+                <h2 className="card-title">Patients List</h2>
               </div>
               <div className="relative w-full lg:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-sky-400" size={16} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by name/mobile/patient id"
-                  className="w-full py-2.5 pl-10 pr-4 border border-sky-100 rounded-xl outline-none focus:border-sky-500 text-sm font-semibold uppercase"
+                  className="search-input"
                 />
               </div>
             </div>
 
             {loadingList ? (
               <div className="py-10 flex justify-center">
-                <Loader2 className="animate-spin text-sky-500" />
+                <Loader2 className="animate-spin text-[color:var(--brand-500)]" />
               </div>
             ) : filteredPatients.length === 0 ? (
               <div className="py-12 text-center text-slate-500 font-bold uppercase">No patients found.</div>
             ) : (
-              <div className="border border-sky-100 rounded-2xl overflow-hidden">
+              <div className="table-wrap">
                 <div className="max-h-[540px] overflow-auto">
                   <table className="w-full min-w-[900px]">
                     <thead>
-                      <tr className="text-left text-xs font-bold uppercase tracking-wider text-sky-600 border-b border-sky-100 bg-white sticky top-0 z-10">
+                      <tr className="table-head sticky top-0 z-10">
                         <th className="py-2 px-3">Patient ID</th>
                         <th className="py-2 px-3">Full Name</th>
                         <th className="py-2 px-3">Mobile</th>
@@ -290,8 +552,14 @@ const PatientsRegistration = () => {
                     </thead>
                     <tbody>
                       {filteredPatients.map((patient) => (
-                        <tr key={patient._id} className="border-b border-sky-50 text-sm text-slate-700 font-semibold">
-                          <td className="py-2 px-3 font-bold text-sky-700">{patient.patientId}</td>
+                        <tr
+                          key={patient._id}
+                          className={`table-row cursor-pointer ${
+                            selectedPatient?.patientId === patient.patientId ? 'bg-slate-50' : 'bg-white'
+                          }`}
+                          onClick={() => setSelectedPatient(patient)}
+                        >
+                          <td className="py-2 px-3 font-bold text-[color:var(--brand-600)]">{patient.patientId}</td>
                           <td className="py-2 px-3">{patient.fullName || '-'}</td>
                           <td className="py-2 px-3">{patient.mobileNumber || '-'}</td>
                           <td className="py-2 px-3">{patient.gender || '-'}</td>
@@ -300,16 +568,22 @@ const PatientsRegistration = () => {
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
-                                onClick={() => handleEdit(patient)}
-                                className="p-2 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-600 hover:text-white transition-all"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEdit(patient);
+                                }}
+                                className="icon-btn"
                                 title="Edit patient"
                               >
                                 <Edit size={16} />
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleDelete(patient)}
-                                className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(patient);
+                                }}
+                                className="danger-btn"
                                 title="Delete patient"
                               >
                                 <Trash2 size={16} />
@@ -324,8 +598,8 @@ const PatientsRegistration = () => {
               </div>
             )}
           </div>
-        ) : (
-        <form onSubmit={handleSubmit} className="max-w-7xl mx-auto bg-white rounded-[28px] p-6 border border-sky-100 shadow-sm space-y-6">
+        ) : activeSection === 'details' ? (
+        <form onSubmit={handleSubmit} className="card space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <InputField
               label="Patient ID (Auto)"
@@ -393,14 +667,227 @@ const PatientsRegistration = () => {
             <button
               type="submit"
               disabled={saving || loadingId}
-              className="w-full py-2 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-sky-500/20 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+              className="w-full py-2 btn-primary justify-center disabled:opacity-50"
             >
               {saving ? <Loader2 className="animate-spin" /> : <Save size={20} />}
               {isEditMode ? 'UPDATE PATIENT' : 'SAVE PATIENT'}
             </button>
           </div>
         </form>
-        )}
+        ) : isEditMode && activeSection === 'visit' ? (
+          <div className="card">
+            <div className="flex items-center gap-3 mb-3 border-b border-slate-100 pb-3">
+              <List className="text-[color:var(--brand-500)]" size={20} />
+              <h2 className="card-title">Visit History</h2>
+            </div>
+            <form onSubmit={submitVisitHistory} className="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                <InputField label="Visit Date" type="date" name="visitDate" value={visitForm.visitDate} onChange={handleVisitChange} required />
+                <SelectField label="Doctor" name="doctorId" value={visitForm.doctorId} onChange={handleVisitDoctorChange}>
+                  <option value="">-- SELECT DOCTOR --</option>
+                  {doctors.map((doc) => (
+                    <option key={doc._id} value={doc.doctorId}>{doc.doctorName}</option>
+                  ))}
+                </SelectField>
+                <SelectField label="Department" name="department" value={visitForm.department} onChange={handleVisitChange} required={false}>
+                  <option value="">-- SELECT DEPARTMENT --</option>
+                  {departments.map((dept) => (
+                    <option key={dept._id} value={dept.deptName}>{dept.deptName}</option>
+                  ))}
+                </SelectField>
+                <SelectField label="Status" name="status" value={visitForm.status} onChange={handleVisitChange}>
+                  <option value="Scheduled">Scheduled</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </SelectField>
+                <InputField label="Prescription URL" name="prescriptionUrl" value={visitForm.prescriptionUrl} onChange={handleVisitChange} required={false} />
+              </div>
+              <div className="mt-3 flex justify-end">
+                <button type="submit" disabled={savingHistory} className="btn-primary disabled:opacity-60">
+                  {savingHistory ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                  SAVE VISIT
+                </button>
+              </div>
+            </form>
+            {!selectedPatient ? (
+              historyEmptyState('Select a patient to view visit history')
+            ) : loadingHistory ? (
+              <div className="py-10 flex justify-center">
+                <Loader2 className="animate-spin text-[color:var(--brand-500)]" />
+              </div>
+            ) : visitHistory.length === 0 ? (
+              historyEmptyState('visit history')
+            ) : (
+              <div className="table-wrap">
+                <div className="max-h-[540px] overflow-auto">
+                  <table className="w-full min-w-[900px]">
+                    <thead>
+                      <tr className="table-head sticky top-0 z-10">
+                        <th className="py-2 px-3">Visit Date</th>
+                        <th className="py-2 px-3">Doctor</th>
+                        <th className="py-2 px-3">Department</th>
+                        <th className="py-2 px-3">Status</th>
+                        <th className="py-2 px-3">Prescription View</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visitHistory.map((item) => (
+                        <tr key={item._id} className="table-row">
+                          <td className="py-2 px-3">{item.visitDate || '-'}</td>
+                          <td className="py-2 px-3">{item.doctorName || doctorMap[item.doctorId]?.doctorName || '-'}</td>
+                          <td className="py-2 px-3">{item.department || doctorMap[item.doctorId]?.department || '-'}</td>
+                          <td className="py-2 px-3">{item.status || '-'}</td>
+                          <td className="py-2 px-3">
+                            {item.prescriptionUrl ? (
+                              <a
+                                className="text-[color:var(--brand-600)] hover:underline"
+                                href={item.prescriptionUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                View
+                              </a>
+                            ) : (
+                              '-'
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : isEditMode && activeSection === 'billing' ? (
+          <div className="card">
+            <div className="flex items-center gap-3 mb-3 border-b border-slate-100 pb-3">
+              <List className="text-[color:var(--brand-500)]" size={20} />
+              <h2 className="card-title">Billing History</h2>
+            </div>
+            <form onSubmit={submitBillingHistory} className="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+                <InputField label="Invoice No" name="invoiceNo" value={billingForm.invoiceNo} onChange={handleBillingChange} required />
+                <InputField label="Date" type="date" name="billDate" value={billingForm.billDate} onChange={handleBillingChange} required />
+                <SelectField label="Doctor" name="doctorId" value={billingForm.doctorId} onChange={handleBillingDoctorChange} required={false}>
+                  <option value="">-- SELECT DOCTOR --</option>
+                  {doctors.map((doc) => (
+                    <option key={doc._id} value={doc.doctorId}>{doc.doctorName}</option>
+                  ))}
+                </SelectField>
+                <SelectField label="Department" name="department" value={billingForm.department} onChange={handleBillingChange} required={false}>
+                  <option value="">-- SELECT DEPARTMENT --</option>
+                  {departments.map((dept) => (
+                    <option key={dept._id} value={dept.deptName}>{dept.deptName}</option>
+                  ))}
+                </SelectField>
+                <InputField label="Amount" type="number" name="amount" value={billingForm.amount} onChange={handleBillingChange} required={false} />
+                <SelectField label="Payment Status" name="paymentStatus" value={billingForm.paymentStatus} onChange={handleBillingChange}>
+                  <option value="Paid">Paid</option>
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Partial">Partial</option>
+                </SelectField>
+              </div>
+              <div className="mt-3 flex justify-end">
+                <button type="submit" disabled={savingHistory} className="btn-primary disabled:opacity-60">
+                  {savingHistory ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                  SAVE BILL
+                </button>
+              </div>
+            </form>
+            {!selectedPatient ? (
+              historyEmptyState('Select a patient to view billing history')
+            ) : loadingHistory ? (
+              <div className="py-10 flex justify-center">
+                <Loader2 className="animate-spin text-[color:var(--brand-500)]" />
+              </div>
+            ) : billingHistory.length === 0 ? (
+              historyEmptyState('billing history')
+            ) : (
+              <div className="table-wrap">
+                <div className="max-h-[540px] overflow-auto">
+                  <table className="w-full min-w-[900px]">
+                    <thead>
+                      <tr className="table-head sticky top-0 z-10">
+                        <th className="py-2 px-3">Invoice No</th>
+                        <th className="py-2 px-3">Date</th>
+                        <th className="py-2 px-3">Amount</th>
+                        <th className="py-2 px-3">Payment Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {billingHistory.map((item) => {
+                        const amountValue = Number(item.amount);
+                        const doctorFee = item.doctorId ? Number(doctorMap[item.doctorId]?.consultationFee || 0) : 0;
+                        const finalAmount = amountValue > 0 ? amountValue : doctorFee;
+                        return (
+                          <tr key={item._id} className="table-row">
+                            <td className="py-2 px-3">{item.invoiceNo || '-'}</td>
+                            <td className="py-2 px-3">{item.billDate || '-'}</td>
+                            <td className="py-2 px-3">{finalAmount ? finalAmount.toFixed(2) : '-'}</td>
+                            <td className="py-2 px-3">{item.paymentStatus || '-'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : isEditMode ? (
+          <div className="card">
+            <div className="flex items-center gap-3 mb-3 border-b border-slate-100 pb-3">
+              <List className="text-[color:var(--brand-500)]" size={20} />
+              <h2 className="card-title">Pharmacy History</h2>
+            </div>
+            <form onSubmit={submitPharmacyHistory} className="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <InputField label="Bill No" name="billNo" value={pharmacyForm.billNo} onChange={handlePharmacyChange} required />
+                <InputField label="Medicines Purchased" name="medicinesPurchased" value={pharmacyForm.medicinesPurchased} onChange={handlePharmacyChange} required />
+                <InputField label="Amount" type="number" name="amount" value={pharmacyForm.amount} onChange={handlePharmacyChange} required={false} />
+              </div>
+              <div className="mt-3 flex justify-end">
+                <button type="submit" disabled={savingHistory} className="btn-primary disabled:opacity-60">
+                  {savingHistory ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                  SAVE PHARMACY
+                </button>
+              </div>
+            </form>
+            {!selectedPatient ? (
+              historyEmptyState('Select a patient to view pharmacy history')
+            ) : loadingHistory ? (
+              <div className="py-10 flex justify-center">
+                <Loader2 className="animate-spin text-[color:var(--brand-500)]" />
+              </div>
+            ) : pharmacyHistory.length === 0 ? (
+              historyEmptyState('pharmacy history')
+            ) : (
+              <div className="table-wrap">
+                <div className="max-h-[540px] overflow-auto">
+                  <table className="w-full min-w-[900px]">
+                    <thead>
+                      <tr className="table-head sticky top-0 z-10">
+                        <th className="py-2 px-3">Bill No</th>
+                        <th className="py-2 px-3">Medicines Purchased</th>
+                        <th className="py-2 px-3">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pharmacyHistory.map((item) => (
+                        <tr key={item._id} className="table-row">
+                          <td className="py-2 px-3">{item.billNo || '-'}</td>
+                          <td className="py-2 px-3">{item.medicinesPurchased || '-'}</td>
+                          <td className="py-2 px-3">{Number(item.amount) ? Number(item.amount).toFixed(2) : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
       </main>
     </div>
   );
@@ -408,22 +895,22 @@ const PatientsRegistration = () => {
 
 const InputField = ({ label, required = false, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">{label}</label>
+    <label className="field-label">{label}</label>
     <input
       required={required}
       {...props}
-      className="w-full py-1.5 px-3 border border-sky-100 rounded-xl font-semibold text-black outline-none focus:border-sky-500 bg-white disabled:bg-slate-50 disabled:text-slate-400 uppercase placeholder:normal-case"
+      className="input-field disabled:bg-slate-50 disabled:text-slate-400 uppercase placeholder:normal-case"
     />
   </div>
 );
 
 const SelectField = ({ label, children, required = true, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">{label}</label>
+    <label className="field-label">{label}</label>
     <select
       required={required}
       {...props}
-      className="w-full py-1.5 px-3 border border-sky-100 rounded-xl font-semibold text-xs text-black outline-none focus:border-sky-500 bg-white uppercase"
+      className="select-field uppercase"
     >
       {children}
     </select>
@@ -432,11 +919,11 @@ const SelectField = ({ label, children, required = true, ...props }) => (
 
 const TextAreaField = ({ label, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">{label}</label>
+    <label className="field-label">{label}</label>
     <textarea
       rows={4}
       {...props}
-      className="w-full py-1.5 px-3 border border-sky-100 rounded-xl font-semibold text-black outline-none focus:border-sky-500 bg-white uppercase"
+      className="textarea-field uppercase"
     />
   </div>
 );

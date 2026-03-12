@@ -195,16 +195,16 @@ const DoctoreSchedule = () => {
   }, [schedules, searchTerm, monthFilter, yearFilter]);
 
   return (
-    <div className="min-h-screen bg-sky-50 font-sans font-semibold">
-      <header className="p-6 sticky top-0 z-20 bg-sky-50/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-3 rounded-[24px] shadow-sm border-b-4 border-sky-400">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-sky-500 rounded-2xl text-white flex items-center justify-center shadow-lg shadow-sky-200">
+    <div className="page-shell">
+      <header className="page-header">
+        <div className="header-card">
+          <div className="header-row">
+            <div className="header-icon">
               <CalendarDays size={30} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Doctor Schedule</h1>
-              <p className="text-sm text-sky-600 font-semibold uppercase tracking-widest mt-0.5">Month Wise Schedule Management</p>
+              <h1 className="header-title">Doctor Schedule</h1>
+              <p className="header-subtitle">Month Wise Schedule Management</p>
             </div>
           </div>
 
@@ -212,7 +212,7 @@ const DoctoreSchedule = () => {
             <button
               type="button"
               onClick={openAddForm}
-              className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-2xl font-bold text-sm tracking-wider flex items-center gap-2 transition-all"
+              className="btn-primary"
             >
               <Plus size={16} />
               ADD SCHEDULE
@@ -221,7 +221,7 @@ const DoctoreSchedule = () => {
             <button
               type="button"
               onClick={closeForm}
-              className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm tracking-wider flex items-center gap-2"
+              className="btn-secondary"
             >
               <ArrowLeft size={16} />
               BACK TO LIST
@@ -232,27 +232,27 @@ const DoctoreSchedule = () => {
 
       <main className="px-6 pb-12">
         {!showForm ? (
-          <div className="max-w-7xl mx-auto bg-white rounded-[32px] p-8 shadow-md border border-sky-100">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 border-b border-sky-50 pb-3">
+          <div className="card p-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 border-b border-slate-100 pb-3">
               <div className="flex items-center gap-3">
-                <List className="text-sky-500" size={20} />
-                <h2 className="text-sm font-bold text-black uppercase tracking-[0.1em]">Doctor Schedule List</h2>
+                <List className="text-[color:var(--brand-500)]" size={20} />
+                <h2 className="card-title">Doctor Schedule List</h2>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
                 <div className="relative w-full sm:w-72">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-sky-400" size={16} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by doctor name or ID"
-                    className="w-full py-2.5 pl-10 pr-4 border border-sky-100 rounded-xl outline-none focus:border-sky-500 text-sm font-semibold uppercase"
+                    className="search-input"
                   />
                 </div>
                 <select
                   value={monthFilter}
                   onChange={(e) => setMonthFilter(e.target.value)}
-                  className="py-2.5 px-3 border border-sky-100 rounded-xl outline-none focus:border-sky-500 text-sm font-semibold uppercase bg-white"
+                  className="select-field uppercase"
                 >
                   {MONTHS.map((m) => (
                     <option key={m.value} value={String(m.value)}>{m.label}</option>
@@ -261,7 +261,7 @@ const DoctoreSchedule = () => {
                 <select
                   value={yearFilter}
                   onChange={(e) => setYearFilter(e.target.value)}
-                  className="py-2.5 px-3 border border-sky-100 rounded-xl outline-none focus:border-sky-500 text-sm font-semibold uppercase bg-white"
+                  className="select-field uppercase"
                 >
                   {yearOptions.map((y) => (
                     <option key={y} value={String(y)}>{y}</option>
@@ -275,11 +275,11 @@ const DoctoreSchedule = () => {
                 {schedules.length === 0 ? 'No schedules saved yet.' : 'No schedule found for this filter.'}
               </div>
             ) : (
-              <div className="border border-sky-100 rounded-2xl overflow-hidden">
+              <div className="table-wrap">
                 <div className="max-h-[540px] overflow-auto">
                   <table className="w-full min-w-[1220px]">
                     <thead>
-                      <tr className="text-left text-xs font-bold uppercase tracking-wider text-sky-600 border-b border-sky-100 bg-white sticky top-0 z-10">
+                      <tr className="table-head sticky top-0 z-10">
                         <th className="py-3 px-3">Doctor ID</th>
                         <th className="py-3 px-3">Doctor Name</th>
                         <th className="py-3 px-3">Month-Year</th>
@@ -294,8 +294,8 @@ const DoctoreSchedule = () => {
                     </thead>
                     <tbody>
                       {filteredSchedules.map((item) => (
-                        <tr key={item._id} className="border-b border-sky-50 text-sm text-slate-700 font-semibold">
-                          <td className="py-3 px-3 font-bold">{item.doctorId}</td>
+                        <tr key={item._id} className="table-row">
+                          <td className="py-3 px-3 font-bold text-[color:var(--brand-600)]">{item.doctorId}</td>
                           <td className="py-3 px-3">{item.doctorName}</td>
                           <td className="py-3 px-3">{MONTHS.find((m) => m.value === Number(item.month))?.label} {item.year}</td>
                           <td className="py-3 px-3">{(item.days || []).join(', ')}</td>
@@ -309,7 +309,7 @@ const DoctoreSchedule = () => {
                               <button
                                 type="button"
                                 onClick={() => handleEdit(item)}
-                                className="p-2 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-600 hover:text-white transition-all"
+                                className="icon-btn"
                                 title="Edit"
                               >
                                 <Edit size={16} />
@@ -317,7 +317,7 @@ const DoctoreSchedule = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDelete(item)}
-                                className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
+                                className="danger-btn"
                                 title="Delete"
                               >
                                 <Trash2 size={16} />
@@ -334,8 +334,8 @@ const DoctoreSchedule = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="max-w-7xl mx-auto space-y-6">
-            <div className="bg-white rounded-[28px] p-6 border border-sky-100 shadow-sm">
-              <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-sky-700 mb-4">Month Wise Schedule (Fixed)</h2>
+            <div className="card p-6">
+              <h2 className="card-title mb-4">Month Wise Schedule (Fixed)</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <SelectField label="Month" name="month" value={formData.month} onChange={handleInputChange}>
                   {MONTHS.map((m) => (
@@ -351,8 +351,8 @@ const DoctoreSchedule = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-8 bg-white rounded-[28px] p-6 border border-sky-100 shadow-sm space-y-6">
-                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-black">Doctor Availability</h3>
+              <div className="lg:col-span-8 card p-6 space-y-6">
+                <h3 className="card-title">Doctor Availability</h3>
 
                 <SelectField label="Doctor Name" name="doctorId" value={formData.doctorId} onChange={handleInputChange}>
                   <option value="">-- SELECT DOCTOR --</option>
@@ -362,7 +362,7 @@ const DoctoreSchedule = () => {
                 </SelectField>
 
                 <div>
-                  <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">Day Selection</label>
+                  <label className="field-label">Day Selection</label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mt-3">
                     {DAYS.map((day) => (
                       <button
@@ -371,8 +371,8 @@ const DoctoreSchedule = () => {
                         onClick={() => toggleDay(day)}
                         className={`py-2 rounded-xl text-xs font-bold border transition-all ${
                           formData.days.includes(day)
-                            ? 'bg-sky-500 text-white border-sky-500'
-                            : 'bg-white text-slate-600 border-sky-100 hover:border-sky-500'
+                            ? 'bg-[color:var(--brand-500)] text-white border-[color:var(--brand-500)]'
+                            : 'bg-white text-slate-600 border-slate-200 hover:border-[color:var(--brand-500)]'
                         }`}
                       >
                         {day}
@@ -395,8 +395,8 @@ const DoctoreSchedule = () => {
               </div>
 
               <div className="lg:col-span-4 space-y-6">
-                <div className="bg-white rounded-[28px] p-6 border border-sky-100 shadow-sm">
-                  <label className="text-xs font-bold text-sky-600 uppercase tracking-widest block mb-3">Booking Mode</label>
+                <div className="card p-6">
+                  <label className="field-label block mb-3">Booking Mode</label>
                   <div className="space-y-2">
                     {['Slot Based', 'FCFS', 'Hybrid'].map((mode) => (
                       <button
@@ -405,8 +405,8 @@ const DoctoreSchedule = () => {
                         onClick={() => setFormData((prev) => ({ ...prev, bookingMode: mode }))}
                         className={`w-full py-3 rounded-xl text-sm font-bold border transition-all ${
                           formData.bookingMode === mode
-                            ? 'bg-sky-500 text-white border-sky-500'
-                            : 'bg-white text-slate-700 border-sky-100 hover:border-sky-500'
+                            ? 'bg-[color:var(--brand-500)] text-white border-[color:var(--brand-500)]'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-[color:var(--brand-500)]'
                         }`}
                       >
                         {mode}
@@ -419,7 +419,7 @@ const DoctoreSchedule = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-sky-500/20 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                    className="w-full py-3 btn-primary justify-center active:scale-95 disabled:opacity-50"
                   >
                     {loading ? <Loader2 className="animate-spin" /> : <Save size={20} />}
                     {editingId ? 'UPDATE SCHEDULE' : 'SAVE SCHEDULE'}
@@ -436,22 +436,22 @@ const DoctoreSchedule = () => {
 
 const InputField = ({ label, required = true, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">{label}</label>
+    <label className="field-label">{label}</label>
     <input
       required={required}
       {...props}
-      className="w-full py-2.5 px-3 border border-sky-100 rounded-xl font-semibold text-slate-700 outline-none focus:border-sky-500 bg-white"
+      className="input-field"
     />
   </div>
 );
 
 const SelectField = ({ label, children, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">{label}</label>
+    <label className="field-label">{label}</label>
     <select
       required
       {...props}
-      className="w-full py-2.5 px-3 border border-sky-100 rounded-xl font-semibold text-slate-700 outline-none focus:border-sky-500 bg-white uppercase"
+      className="select-field uppercase"
     >
       {children}
     </select>

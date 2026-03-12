@@ -395,16 +395,16 @@ const AppointmentBooking = () => {
   }, [appointments, searchTerm]);
 
   return (
-    <div className="min-h-screen bg-sky-50 font-sans font-semibold">
-      <header className="p-6 sticky top-0 z-20 bg-sky-50/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-3 rounded-[24px] shadow-sm border-b-4 border-sky-400">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-sky-500 rounded-2xl text-white flex items-center justify-center shadow-lg shadow-sky-200">
+    <div className="page-shell">
+      <header className="page-header">
+        <div className="header-card">
+          <div className="header-row">
+            <div className="header-icon">
               <CalendarDays size={30} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Appointment Booking</h1>
-              <p className="text-sm text-sky-600 font-semibold uppercase tracking-widest mt-0.5">List + Slot Booking Form</p>
+              <h1 className="header-title">Appointment Booking</h1>
+              <p className="header-subtitle">List + Slot Booking Form</p>
             </div>
           </div>
 
@@ -412,7 +412,7 @@ const AppointmentBooking = () => {
             <button
               type="button"
               onClick={openForm}
-              className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-2xl font-bold text-sm tracking-wider flex items-center gap-2 transition-all"
+              className="btn-primary"
             >
               <Plus size={16} />
               ADD APPOINTMENT
@@ -421,7 +421,7 @@ const AppointmentBooking = () => {
             <button
               type="button"
               onClick={closeForm}
-              className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm tracking-wider flex items-center gap-2"
+              className="btn-secondary"
             >
               <ArrowLeft size={16} />
               BACK TO LIST
@@ -432,36 +432,36 @@ const AppointmentBooking = () => {
 
       <main className="px-6 pb-12">
         {!showForm ? (
-          <div className="max-w-7xl mx-auto bg-white rounded-[32px] p-8 shadow-md border border-sky-100">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 border-b border-sky-50 pb-3">
+          <div className="card p-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 border-b border-slate-100 pb-3">
               <div className="flex items-center gap-3">
-                <List className="text-sky-500" size={20} />
-                <h2 className="text-sm font-bold text-black uppercase tracking-[0.1em]">Appointment Booking List</h2>
+                <List className="text-[color:var(--brand-500)]" size={20} />
+                <h2 className="card-title">Appointment Booking List</h2>
               </div>
               <div className="relative w-full lg:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-sky-400" size={16} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by patient/doctor/token/date"
-                  className="w-full py-2.5 pl-10 pr-4 border border-sky-100 rounded-xl outline-none focus:border-sky-500 text-sm font-semibold uppercase"
+                  className="search-input"
                 />
               </div>
             </div>
 
             {loading ? (
               <div className="py-10 flex justify-center">
-                <Loader2 className="animate-spin text-sky-500" />
+                <Loader2 className="animate-spin text-[color:var(--brand-500)]" />
               </div>
             ) : filteredAppointments.length === 0 ? (
               <div className="py-12 text-center text-slate-500 font-bold uppercase">No appointments found.</div>
             ) : (
-              <div className="border border-sky-100 rounded-2xl overflow-hidden">
+              <div className="table-wrap">
                 <div className="max-h-[540px] overflow-auto">
                   <table className="w-full min-w-[1300px]">
                     <thead>
-                      <tr className="text-left text-xs font-bold uppercase tracking-wider text-sky-600 border-b border-sky-100 bg-white sticky top-0 z-10">
+                      <tr className="table-head sticky top-0 z-10">
                         <th className="py-3 px-3">Token</th>
                         <th className="py-3 px-3">Patient</th>
                         <th className="py-3 px-3">Mobile</th>
@@ -477,8 +477,8 @@ const AppointmentBooking = () => {
                     </thead>
                     <tbody>
                       {filteredAppointments.map((item) => (
-                        <tr key={item._id} className="border-b border-sky-50 text-sm text-slate-700 font-semibold">
-                          <td className="py-3 px-3 font-bold text-sky-700">{item.tokenNumber}</td>
+                        <tr key={item._id} className="table-row">
+                          <td className="py-3 px-3 font-bold text-[color:var(--brand-600)]">{item.tokenNumber}</td>
                           <td className="py-3 px-3">{item.patientName || item.patientSearch || '-'}</td>
                           <td className="py-3 px-3">{item.patientMobile || '-'}</td>
                           <td className="py-3 px-3">{item.department}</td>
@@ -487,7 +487,7 @@ const AppointmentBooking = () => {
                           <td className="py-3 px-3">{item.bookingType}</td>
                           <td className="py-3 px-3">{item.selectedSlot || '-'}</td>
                           <td className="py-3 px-3">
-                            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${item.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                            <span className={item.paymentStatus === 'Paid' ? 'badge-success' : 'badge-danger'}>
                               {item.paymentStatus}
                             </span>
                           </td>
@@ -497,7 +497,7 @@ const AppointmentBooking = () => {
                               <button
                                 type="button"
                                 onClick={() => handleEditAppointment(item)}
-                                className="p-2 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-600 hover:text-white transition-all"
+                                className="icon-btn"
                                 title="Edit appointment"
                               >
                                 <Edit size={16} />
@@ -505,7 +505,7 @@ const AppointmentBooking = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteAppointment(item)}
-                                className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
+                                className="danger-btn"
                                 title="Delete appointment"
                               >
                                 <Trash2 size={16} />
@@ -522,29 +522,29 @@ const AppointmentBooking = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="w-full max-w-none mx-auto">
-            <div className="bg-white rounded-[28px] p-6 border border-sky-100 shadow-sm space-y-6">
-              <div className="flex items-center gap-3 border-b border-sky-50 pb-3">
-                <User className="text-sky-500" size={20} />
-                <h2 className="text-sm font-bold uppercase tracking-[0.1em] text-black">Patient Search / Add New</h2>
+            <div className="card space-y-6 p-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <User className="text-[color:var(--brand-500)]" size={20} />
+                <h2 className="card-title">Patient Search / Add New</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-sky-400" size={16} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                   <input
                     type="text"
                     name="patientSearch"
                     value={formData.patientSearch}
                     onChange={handleChange}
                     placeholder="SEARCH BY NAME / UHID / MOBILE"
-                    className="w-full py-2.5 pl-10 pr-4 border border-sky-100 rounded-xl outline-none focus:border-sky-500 text-sm font-semibold uppercase"
+                    className="search-input"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowAddPatient((prev) => !prev)}
                   className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${
-                    showAddPatient ? 'bg-sky-500 text-white border-sky-500' : 'bg-white text-slate-700 border-sky-100 hover:border-sky-500'
+                    showAddPatient ? 'bg-[color:var(--brand-500)] text-white border-[color:var(--brand-500)]' : 'bg-white text-slate-700 border-slate-200 hover:border-[color:var(--brand-500)]'
                   }`}
                 >
                   {showAddPatient ? 'CLOSE NEW PATIENT' : 'ADD NEW PATIENT'}
@@ -576,7 +576,7 @@ const AppointmentBooking = () => {
 
               {formData.doctorId && (
                 <div className="space-y-3">
-                  <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">
+                  <label className="field-label">
                     This Month Date Slot Status (Green = Enable, Red/Gray = Disable)
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -593,7 +593,7 @@ const AppointmentBooking = () => {
                           key={card.dateStr}
                           type="button"
                           onClick={() => handleDateCardClick(card.dateStr, card.enabled)}
-                          className={`border rounded-xl p-2 text-left transition-all ${stateClass} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
+                          className={`border rounded-xl p-2 text-left transition-all ${stateClass} ${isSelected ? 'ring-2 ring-[color:var(--brand-500)]' : ''}`}
                           disabled={!card.enabled}
                         >
                           <div className="text-xs font-bold">{card.label}</div>
@@ -617,13 +617,13 @@ const AppointmentBooking = () => {
                 />
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">Slots (Booked are disabled)</label>
+                  <label className="field-label">Slots (Booked are disabled)</label>
                   <select
                     name="selectedSlot"
                     value={formData.selectedSlot}
                     onChange={handleChange}
                     disabled={formData.bookingType === 'Walk-in'}
-                    className="w-full py-2.5 px-3 border border-sky-100 rounded-xl font-semibold text-xs text-slate-700 outline-none focus:border-sky-500 bg-white disabled:bg-slate-50 disabled:text-slate-400 uppercase"
+                    className="select-field uppercase disabled:bg-slate-50 disabled:text-slate-400"
                   >
                     <option value="">
                       {formData.appointmentDate
@@ -674,13 +674,13 @@ const AppointmentBooking = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">Notes</label>
+                <label className="field-label">Notes</label>
                 <textarea
                   name="notes"
                   value={formData.notes}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full py-2.5 px-3 border border-sky-100 rounded-xl font-semibold text-slate-700 outline-none focus:border-sky-500 bg-white uppercase"
+                  className="textarea-field uppercase"
                   placeholder="OPTIONAL NOTES"
                 />
               </div>
@@ -689,7 +689,7 @@ const AppointmentBooking = () => {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full py-1 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-sky-500/20 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                  className="w-full py-1 btn-primary justify-center active:scale-95 disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="animate-spin" /> : <Save size={10} />}
                   {isEditMode ? 'UPDATE APPOINTMENT' : 'SAVE APPOINTMENT'}
@@ -705,22 +705,22 @@ const AppointmentBooking = () => {
 
 const InputField = ({ label, required = true, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">{label}</label>
+    <label className="field-label">{label}</label>
     <input
       required={required}
       {...props}
-      className="w-full py-2.5 px-3 border border-sky-100 rounded-xl font-semibold text-slate-700 outline-none focus:border-sky-500 bg-white disabled:bg-slate-50 disabled:text-slate-400 uppercase placeholder:normal-case"
+      className="input-field disabled:bg-slate-50 disabled:text-slate-400 uppercase placeholder:normal-case"
     />
   </div>
 );
 
 const SelectField = ({ label, children, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">{label}</label>
+    <label className="field-label">{label}</label>
     <select
       required
       {...props}
-      className="w-full py-2.5 px-3 border border-sky-100 rounded-xl font-semibold text-xs text-slate-700 outline-none focus:border-sky-500 bg-white uppercase"
+      className="select-field uppercase"
     >
       {children}
     </select>
@@ -729,7 +729,7 @@ const SelectField = ({ label, children, ...props }) => (
 
 const ChoiceField = ({ label, name, value, onChange, options, disabled = false }) => (
   <div className="flex flex-col gap-2">
-    <label className="text-xs font-bold text-sky-600 uppercase tracking-widest">{label}</label>
+    <label className="field-label">{label}</label>
     <div className="grid grid-cols-2 gap-2">
       {options.map((opt) => (
         <button
@@ -738,7 +738,7 @@ const ChoiceField = ({ label, name, value, onChange, options, disabled = false }
           disabled={disabled}
           onClick={() => onChange({ target: { name, value: opt } })}
           className={`py-2.5 rounded-xl text-sm font-bold border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-            value === opt ? 'bg-sky-500 text-white border-sky-500' : 'bg-white text-slate-700 border-sky-100 hover:border-sky-500'
+            value === opt ? 'bg-[color:var(--brand-500)] text-white border-[color:var(--brand-500)]' : 'bg-white text-slate-700 border-slate-200 hover:border-[color:var(--brand-500)]'
           }`}
         >
           {opt}

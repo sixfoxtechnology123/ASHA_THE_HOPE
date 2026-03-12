@@ -1,4 +1,5 @@
 const Patient = require('../models/Patient');
+const Doctor = require('../models/Doctor');
 
 const getAgeFromDob = (dob) => {
   if (!dob) return 0;
@@ -77,6 +78,16 @@ exports.getAllPatients = async (req, res) => {
   }
 };
 
+exports.getPatientById = async (req, res) => {
+  try {
+    const data = await Patient.findById(req.params.id);
+    if (!data) return res.status(404).json({ success: false, message: 'PATIENT NOT FOUND' });
+    return res.json({ success: true, data });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 exports.updatePatient = async (req, res) => {
   try {
     const payload = { ...req.body };
@@ -109,5 +120,148 @@ exports.deletePatient = async (req, res) => {
     return res.json({ success: true, message: 'PATIENT DELETED' });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const loadDoctorMeta = async (doctorId) => {
+  if (!doctorId) return null;
+  return Doctor.findOne({ doctorId }).select('doctorName department consultationFee').lean();
+};
+
+exports.getVisitHistory = async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id).select('visitHistory');
+    if (!patient) return res.status(404).json({ success: false, message: 'PATIENT NOT FOUND' });
+    return res.json({ success: true, data: patient.visitHistory || [] });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.addVisitHistory = async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id);
+    if (!patient) return res.status(404).json({ success: false, message: 'PATIENT NOT FOUND' });
+
+    const payload = { ...req.body };
+    if (!payload.visitDate || !payload.doctorId) {
+      return res.status(400).json({ success: false, message: 'VISIT DATE AND DOCTOR REQUIRED' });
+    }
+
+    if (!payload.doctorName || !payload.department) {
+      const doctor = await loadDoctorMeta(payload.doctorId);
+      if (doctor) {
+        payload.doctorName = payload.doctorName || doctor.doctorName;
+        payload.department = payload.department || doctor.department;
+      }
+    }
+
+    if (!payload.doctorName || !payload.department) {
+      return res.status(400).json({ success: false, message: 'DOCTOR DETAILS MISSING' });
+    }
+
+    const entry = {
+      patientId: patient.patientId,
+      patientName: patient.fullName,
+      visitDate: payload.visitDate,
+      doctorId: payload.doctorId,
+      doctorName: payload.doctorName,
+      department: payload.department,
+      status: payload.status || 'Scheduled',
+      prescriptionUrl: payload.prescriptionUrl || ''
+    };
+
+    patient.visitHistory.unshift(entry);
+    await patient.save();
+    return res.status(201).json({ success: true, message: 'VISIT HISTORY SAVED', data: entry });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.getBillingHistory = async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id).select('billingHistory');
+    if (!patient) return res.status(404).json({ success: false, message: 'PATIENT NOT FOUND' });
+    return res.json({ success: true, data: patient.billingHistory || [] });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.addBillingHistory = async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id);
+    if (!patient) return res.status(404).json({ success: false, message: 'PATIENT NOT FOUND' });
+
+    const payload = { ...req.body };
+    if (!payload.invoiceNo || !payload.billDate) {
+      return res.status(400).json({ success: false, message: 'INVOICE NO AND DATE REQUIRED' });
+    }
+
+    if (payload.doctorId && (!payload.doctorName || !payload.department || !payload.amount)) {
+      const doctor = await loadDoctorMeta(payload.doctorId);
+      if (doctor) {
+        payload.doctorName = payload.doctorName || doctor.doctorName;
+        payload.department = payload.department || doctor.department;
+        if (!payload.amount || Number(payload.amount) <= 0) {
+          payload.amount = Number(doctor.consultationFee) || 0;
+        }
+      }
+    }
+
+    const entry = {
+      patientId: patient.patientId,
+      patientName: patient.fullName,
+      invoiceNo: payload.invoiceNo,
+      billDate: payload.billDate,
+      doctorId: payload.doctorId || '',
+      doctorName: payload.doctorName || '',
+      department: payload.department || '',
+      amount: Number(payload.amount) || 0,
+      paymentStatus: payload.paymentStatus || 'Unpaid'
+    };
+
+    patient.billingHistory.unshift(entry);
+    await patient.save();
+    return res.status(201).json({ success: true, message: 'BILLING HISTORY SAVED', data: entry });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.getPharmacyHistory = async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id).select('pharmacyHistory');
+    if (!patient) return res.status(404).json({ success: false, message: 'PATIENT NOT FOUND' });
+    return res.json({ success: true, data: patient.pharmacyHistory || [] });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.addPharmacyHistory = async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id);
+    if (!patient) return res.status(404).json({ success: false, message: 'PATIENT NOT FOUND' });
+
+    const payload = { ...req.body };
+    if (!payload.billNo || !payload.medicinesPurchased) {
+      return res.status(400).json({ success: false, message: 'BILL NO AND MEDICINES REQUIRED' });
+    }
+
+    const entry = {
+      patientId: patient.patientId,
+      patientName: patient.fullName,
+      billNo: payload.billNo,
+      medicinesPurchased: payload.medicinesPurchased,
+      amount: Number(payload.amount) || 0
+    };
+
+    patient.pharmacyHistory.unshift(entry);
+    await patient.save();
+    return res.status(201).json({ success: true, message: 'PHARMACY HISTORY SAVED', data: entry });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
   }
 };

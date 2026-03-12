@@ -1,5 +1,45 @@
 const mongoose = require('mongoose');
 
+const visitHistorySchema = new mongoose.Schema(
+  {
+    patientId: { type: String, required: true },
+    patientName: { type: String, default: '' },
+    visitDate: { type: String, required: true }, // YYYY-MM-DD
+    doctorId: { type: String, required: true },
+    doctorName: { type: String, required: true },
+    department: { type: String, required: true },
+    status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' },
+    prescriptionUrl: { type: String, default: '' }
+  },
+  { timestamps: true }
+);
+
+const billingHistorySchema = new mongoose.Schema(
+  {
+    patientId: { type: String, required: true },
+    patientName: { type: String, default: '' },
+    invoiceNo: { type: String, required: true },
+    billDate: { type: String, required: true }, // YYYY-MM-DD
+    doctorId: { type: String, default: '' },
+    doctorName: { type: String, default: '' },
+    department: { type: String, default: '' },
+    amount: { type: Number, default: 0 },
+    paymentStatus: { type: String, enum: ['Paid', 'Unpaid', 'Partial'], default: 'Unpaid' }
+  },
+  { timestamps: true }
+);
+
+const pharmacyHistorySchema = new mongoose.Schema(
+  {
+    patientId: { type: String, required: true },
+    patientName: { type: String, default: '' },
+    billNo: { type: String, required: true },
+    medicinesPurchased: { type: String, required: true },
+    amount: { type: Number, default: 0 }
+  },
+  { timestamps: true }
+);
+
 const patientSchema = new mongoose.Schema(
   {
     patientId: { type: String, required: true, unique: true },
@@ -15,8 +55,11 @@ const patientSchema = new mongoose.Schema(
     knownMedicalConditions: { type: String, default: '', trim: true },
     emergencyContactName: { type: String, default: '', trim: true },
     emergencyContactNumber: { type: String, default: '', trim: true },
-    department: { type: String, enum: ['General', 'Eye', 'Dental'], default: 'General' },
-    notes: { type: String, default: '', trim: true }
+    department: { type: String, default: 'General' },
+    notes: { type: String, default: '', trim: true },
+    visitHistory: { type: [visitHistorySchema], default: [] },
+    billingHistory: { type: [billingHistorySchema], default: [] },
+    pharmacyHistory: { type: [pharmacyHistorySchema], default: [] }
   },
   { timestamps: true }
 );
