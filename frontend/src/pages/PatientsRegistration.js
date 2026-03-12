@@ -5,6 +5,7 @@ import { UserPlus, Save, Loader2, Plus, ArrowLeft, Search, List, Edit, Trash2 } 
 
 const getInitialFormData = () => ({
   patientId: '',
+  appointmentId: '',
   fullName: '',
   gender: 'Male',
   dob: '',
@@ -42,6 +43,7 @@ const PatientsRegistration = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingPatientId, setEditingPatientId] = useState(null);
   const [patients, setPatients] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState(getInitialFormData());
   const [activeSection, setActiveSection] = useState('details');
@@ -110,6 +112,21 @@ const PatientsRegistration = () => {
     fetchPatients();
   }, []);
 
+  const fetchAppointments = async () => {
+    try {
+      const res = await api.get(`/appointments/all`);
+      if (res.data.success) {
+        setAppointments(res.data.data || []);
+      }
+    } catch (err) {
+      toast.error('FAILED TO LOAD APPOINTMENTS');
+    }
+  };
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
   const fetchDepartments = async () => {
     try {
       const res = await api.get(`/master/department/all`);
@@ -149,6 +166,17 @@ const PatientsRegistration = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'appointmentId') {
+      const selected = appointments.find((appt) => appt.appointmentId === value);
+      setFormData((prev) => ({
+        ...prev,
+        appointmentId: value,
+        fullName: selected?.patientName || prev.fullName,
+        mobileNumber: selected?.patientMobile || prev.mobileNumber,
+        department: selected?.department || prev.department
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -175,6 +203,7 @@ const PatientsRegistration = () => {
     setEditingPatientId(patient._id);
     setFormData({
       patientId: patient.patientId || '',
+      appointmentId: patient.appointmentId || '',
       fullName: patient.fullName || '',
       gender: patient.gender || 'Male',
       dob: patient.dob || '',
@@ -232,6 +261,7 @@ const PatientsRegistration = () => {
         emergencyContactName: formData.emergencyContactName,
         emergencyContactNumber: formData.emergencyContactNumber,
         department: formData.department,
+        appointmentId: formData.appointmentId || '',
         notes: formData.notes
       };
 
@@ -607,6 +637,14 @@ const PatientsRegistration = () => {
               onChange={handleChange}
               readOnly
             />
+            <SelectField label="Appointment ID" name="appointmentId" value={formData.appointmentId} onChange={handleChange} required={false}>
+              <option value="">-- SELECT APPOINTMENT --</option>
+              {appointments.map((appt) => (
+                <option key={appt._id} value={appt.appointmentId}>
+                  {appt.appointmentId} | {appt.patientName || 'UNKNOWN'} | {appt.patientMobile || 'N/A'}
+                </option>
+              ))}
+            </SelectField>
             <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} required />
             <SelectField label="Gender" name="gender" value={formData.gender} onChange={handleChange}>
               <option value="Male">Male</option>

@@ -46,15 +46,8 @@ const DoctoreSchedule = () => {
   const [doctors, setDoctors] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [monthFilter, setMonthFilter] = useState(String(currentMonth));
-  const [yearFilter, setYearFilter] = useState(String(currentYear));
+  const [monthFilter, setMonthFilter] = useState(`${currentYear}-${String(currentMonth).padStart(2, '0')}`);
   const [formData, setFormData] = useState(getInitialFormData());
-
-  const yearOptions = useMemo(() => {
-    const years = [];
-    for (let y = currentYear - 2; y <= currentYear + 5; y += 1) years.push(y);
-    return years;
-  }, []);
 
   const fetchDoctors = async () => {
     try {
@@ -118,6 +111,31 @@ const DoctoreSchedule = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleMonthFilterChange = (e) => {
+    setMonthFilter(e.target.value);
+  };
+
+  const handleFormMonthChange = (e) => {
+    const value = e.target.value;
+    if (!value) {
+      setFormData((prev) => ({ ...prev, month: '', year: '' }));
+      return;
+    }
+    const [yearStr, monthStr] = value.split('-');
+    const parsedMonth = Number(monthStr);
+    const parsedYear = Number(yearStr);
+    setFormData((prev) => ({
+      ...prev,
+      month: Number.isNaN(parsedMonth) ? prev.month : parsedMonth,
+      year: Number.isNaN(parsedYear) ? prev.year : parsedYear
+    }));
+  };
+
+  const formatMonthValue = (month, year) => {
+    if (!month || !year) return '';
+    return `${year}-${String(month).padStart(2, '0')}`;
+  };
+
   const toggleDay = (day) => {
     setFormData((prev) => ({
       ...prev,
@@ -163,6 +181,7 @@ const DoctoreSchedule = () => {
     e.preventDefault();
 
     if (!formData.doctorId || !formData.doctorName) return toast.error('PLEASE SELECT DOCTOR');
+    if (!formData.month || !formData.year) return toast.error('PLEASE SELECT MONTH & YEAR');
     if (!formData.days.length) return toast.error('PLEASE SELECT AT LEAST ONE DAY');
 
     setLoading(true);
@@ -200,12 +219,11 @@ const DoctoreSchedule = () => {
         (item.doctorName || '').toLowerCase().includes(query) ||
         (item.doctorId || '').toLowerCase().includes(query);
 
-      const matchMonth = !monthFilter || String(item.month) === monthFilter;
-      const matchYear = !yearFilter || String(item.year) === yearFilter;
+      const matchMonth = !monthFilter || `${item.year}-${String(item.month).padStart(2, '0')}` === monthFilter;
 
-      return matchSearch && matchMonth && matchYear;
+      return matchSearch && matchMonth;
     });
-  }, [schedules, searchTerm, monthFilter, yearFilter]);
+  }, [schedules, searchTerm, monthFilter]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-semibold">
@@ -262,24 +280,12 @@ const DoctoreSchedule = () => {
                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 pl-10 text-[11px] font-bold uppercase tracking-wide outline-none focus:border-emerald-500"
                   />
                 </div>
-                <select
+                <input
+                  type="month"
                   value={monthFilter}
-                  onChange={(e) => setMonthFilter(e.target.value)}
+                  onChange={handleMonthFilterChange}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none focus:border-emerald-500"
-                >
-                  {MONTHS.map((m) => (
-                    <option key={m.value} value={String(m.value)}>{m.label}</option>
-                  ))}
-                </select>
-                <select
-                  value={yearFilter}
-                  onChange={(e) => setYearFilter(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none focus:border-emerald-500"
-                >
-                  {yearOptions.map((y) => (
-                    <option key={y} value={String(y)}>{y}</option>
-                  ))}
-                </select>
+                />
               </div>
             </div>
 
@@ -353,16 +359,16 @@ const DoctoreSchedule = () => {
               <h2 className="mb-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-600">Month Wise Schedule (Fixed)</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <InputField label="Schedule ID" name="scheduleId" value={formData.scheduleId} onChange={handleInputChange} readOnly />
-                <SelectField label="Month" name="month" value={formData.month} onChange={handleInputChange}>
-                  {MONTHS.map((m) => (
-                    <option key={m.value} value={m.value}>{m.label}</option>
-                  ))}
-                </SelectField>
-                <SelectField label="Year" name="year" value={formData.year} onChange={handleInputChange}>
-                  {yearOptions.map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </SelectField>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">Month &amp; Year</label>
+                  <input
+                    type="month"
+                    value={formatMonthValue(formData.month, formData.year)}
+                    onChange={handleFormMonthChange}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none focus:border-emerald-500"
+                    required
+                  />
+                </div>
               </div>
             </div>
 

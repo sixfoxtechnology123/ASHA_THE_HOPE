@@ -56,6 +56,7 @@ exports.registerPatient = async (req, res) => {
       emergencyContactName: payload.emergencyContactName || '',
       emergencyContactNumber: payload.emergencyContactNumber || '',
       department: payload.department || 'General',
+      appointmentId: payload.appointmentId || '',
       notes: payload.notes || ''
     });
 

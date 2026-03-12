@@ -4,12 +4,13 @@ const ConsultationBillSchema = new mongoose.Schema(
   {
     billId: { type: String, unique: true },
     patientName: { type: String, required: true },
+    patientPhone: { type: String, default: '' },
     appointmentRef: { type: String },
     doctorName: { type: String },
     consultationFee: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
     netAmount: { type: Number, default: 0 },
-    gstApplicable: { type: Boolean, default: true },
+    gstRate: { type: Number, default: 0 },
     gstAmount: { type: Number, default: 0 },
     finalAmount: { type: Number, default: 0 },
     paymentMode: {

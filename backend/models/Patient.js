@@ -56,6 +56,7 @@ const patientSchema = new mongoose.Schema(
     emergencyContactName: { type: String, default: '', trim: true },
     emergencyContactNumber: { type: String, default: '', trim: true },
     department: { type: String, default: 'General' },
+    appointmentId: { type: String, default: '' },
     notes: { type: String, default: '', trim: true },
     visitHistory: { type: [visitHistorySchema], default: [] },
     billingHistory: { type: [billingHistorySchema], default: [] },

@@ -89,6 +89,7 @@ const AppointmentBooking = () => {
   const [appointments, setAppointments] = useState([]);
   const [nextToken, setNextToken] = useState(1);
   const [nextAppointmentId, setNextAppointmentId] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState(() => toLocalYmd(new Date()).slice(0, 7));
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState(getInitialFormData());
   const [editingAppointmentId, setEditingAppointmentId] = useState(null);
@@ -142,8 +143,11 @@ const AppointmentBooking = () => {
 
   const selectedMonthInfo = useMemo(() => {
     const now = new Date();
-    return { month: now.getMonth() + 1, year: now.getFullYear(), todayYmd: toLocalYmd(now) };
-  }, []);
+    const [yearStr, monthStr] = String(selectedMonth || '').split('-');
+    const month = Number(monthStr) || now.getMonth() + 1;
+    const year = Number(yearStr) || now.getFullYear();
+    return { month, year, todayYmd: toLocalYmd(now), monthValue: `${year}-${String(month).padStart(2, '0')}` };
+  }, [selectedMonth]);
 
   const doctorMonthSchedules = useMemo(() => {
     if (!formData.doctorId) return [];
@@ -244,6 +248,11 @@ const AppointmentBooking = () => {
     return cards;
   }, [appointments, editingAppointmentId, formData.doctorId, doctorMonthSchedules, selectedMonthInfo.month, selectedMonthInfo.year, selectedMonthInfo.todayYmd, getScheduleForDate, selectedMonthInfo]);
 
+  const hasAvailableSlotsForMonth = useMemo(
+    () => monthDateCards.some((card) => card.enabled),
+    [monthDateCards]
+  );
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -282,6 +291,16 @@ const AppointmentBooking = () => {
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleMonthChange = (e) => {
+    const value = e.target.value;
+    setSelectedMonth(value);
+    setFormData((prev) => ({
+      ...prev,
+      appointmentDate: '',
+      selectedSlot: ''
+    }));
   };
 
   const handleDateCardClick = (dateStr, enabled) => {
@@ -559,30 +578,48 @@ const AppointmentBooking = () => {
                   <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">
                     This Month Date Slot Status (Green = Enable, Red/Gray = Disable)
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                    {monthDateCards.map((card) => {
-                      const isSelected = formData.appointmentDate === card.dateStr;
-                      const stateClass = !card.enabled
-                        ? card.status === 'Full'
-                          ? 'bg-rose-100 text-rose-700 border-rose-200'
-                          : 'bg-slate-100 text-slate-500 border-slate-200'
-                        : 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200';
-
-                      return (
-                        <button
-                          key={card.dateStr}
-                          type="button"
-                          onClick={() => handleDateCardClick(card.dateStr, card.enabled)}
-                          className={`border rounded-xl p-2 text-left transition-all ${stateClass} ${isSelected ? 'ring-2 ring-emerald-500' : ''}`}
-                          disabled={!card.enabled}
-                        >
-                          <div className="text-xs font-bold">{card.label}</div>
-                          <div className="text-[10px] font-semibold">{card.status}</div>
-                          <div className="text-[10px] font-semibold">Free {card.free}/{card.total}</div>
-                        </button>
-                      );
-                    })}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">Month</label>
+                      <input
+                        type="month"
+                        value={selectedMonthInfo.monthValue}
+                        onChange={handleMonthChange}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none focus:border-emerald-500"
+                      />
+                    </div>
                   </div>
+
+                  {hasAvailableSlotsForMonth ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                      {monthDateCards.map((card) => {
+                        const isSelected = formData.appointmentDate === card.dateStr;
+                        const stateClass = !card.enabled
+                          ? card.status === 'Full'
+                            ? 'bg-rose-100 text-rose-700 border-rose-200'
+                            : 'bg-slate-100 text-slate-500 border-slate-200'
+                          : 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200';
+
+                        return (
+                          <button
+                            key={card.dateStr}
+                            type="button"
+                            onClick={() => handleDateCardClick(card.dateStr, card.enabled)}
+                            className={`border rounded-xl p-2 text-left transition-all ${stateClass} ${isSelected ? 'ring-2 ring-emerald-500' : ''}`}
+                            disabled={!card.enabled}
+                          >
+                            <div className="text-xs font-bold">{card.label}</div>
+                            <div className="text-[10px] font-semibold">{card.status}</div>
+                            <div className="text-[10px] font-semibold">Free {card.free}/{card.total}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-bold uppercase text-slate-500">
+                      No schedule available for the selected month.
+                    </div>
+                  )}
                 </div>
               )}
 
