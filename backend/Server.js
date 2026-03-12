@@ -10,6 +10,8 @@ const doctorRoutes = require('./routes/doctorRoutes');
 const doctorScheduleRoutes = require('./routes/doctorScheduleRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const patientRoutes = require('./routes/patientRoutes');
+const { authenticate } = require('./utils/authMiddleware');
+const billingRoutes = require('./routes/ConsultationBillingRoutes');
 
 const app = express();
 app.use(cors());
@@ -17,12 +19,13 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/master', specializationRoutes);
-app.use('/api/master/department', departmentRoutes);
-app.use('/api/doctors', doctorRoutes);
-app.use('/api/doctor-schedules', doctorScheduleRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/patients', patientRoutes);
+app.use('/api/master', authenticate, specializationRoutes);
+app.use('/api/master/department', authenticate, departmentRoutes);
+app.use('/api/doctors', authenticate, doctorRoutes);
+app.use('/api/doctor-schedules', authenticate, doctorScheduleRoutes);
+app.use('/api/appointments', authenticate, appointmentRoutes);
+app.use('/api/patients', authenticate, patientRoutes);
+app.use('/api/billing', authenticate, billingRoutes);
 
 // DB Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/asha_hope')

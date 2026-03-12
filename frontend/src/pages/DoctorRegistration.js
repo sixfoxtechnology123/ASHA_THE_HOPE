@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../config/api';
+import { api } from '../config/api';
 import { Stethoscope, Save, ShieldCheck, Loader2, User, CreditCard, List, Plus, ArrowLeft, Edit, Trash2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -32,7 +31,7 @@ const DoctorRegistration = () => {
 
   const fetchDoctors = async () => {
     try {
-      const doctorRes = await axios.get(`${API_BASE_URL}/api/doctors/all`);
+      const doctorRes = await api.get(`/doctors/all`);
       if (doctorRes.data.success) setDoctors(doctorRes.data.data || []);
     } catch (err) {
       console.error('Doctor List Error:', err);
@@ -43,8 +42,8 @@ const DoctorRegistration = () => {
   const fetchInitialData = async () => {
     try {
       const [deptRes, idRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/api/master/department/all`),
-        axios.get(`${API_BASE_URL}/api/doctors/latest-id`)
+        api.get(`/master/department/all`),
+        api.get(`/doctors/latest-id`)
       ]);
 
       if (deptRes.data.success) setDepartments(deptRes.data.data);
@@ -90,7 +89,7 @@ const DoctorRegistration = () => {
 
   const openAddForm = async () => {
     try {
-      const idRes = await axios.get(`${API_BASE_URL}/api/doctors/latest-id`);
+      const idRes = await api.get(`/doctors/latest-id`);
       const latestId = idRes.data?.success ? idRes.data.nextId : '';
       setFormData({ ...getInitialFormData(), doctorId: latestId });
     } catch (err) {
@@ -132,7 +131,7 @@ const DoctorRegistration = () => {
     const confirmed = window.confirm(`Delete ${doctor.doctorName} (${doctor.doctorId})?`);
     if (!confirmed) return;
     try {
-      const res = await axios.delete(`${API_BASE_URL}/api/doctors/${doctor._id}`);
+      const res = await api.delete(`/doctors/${doctor._id}`);
       if (res.data.success) {
         toast.success('DOCTOR DELETED SUCCESSFULLY!');
         await fetchDoctors();
@@ -150,8 +149,8 @@ const DoctorRegistration = () => {
     setLoading(true);
     try {
       const res = editingDoctorId
-        ? await axios.put(`${API_BASE_URL}/api/doctors/update/${editingDoctorId}`, formData)
-        : await axios.post(`${API_BASE_URL}/api/doctors/register`, formData);
+        ? await api.put(`/doctors/update/${editingDoctorId}`, formData)
+        : await api.post(`/doctors/register`, formData);
       if (res.data.success) {
         toast.success(editingDoctorId ? 'DOCTOR UPDATED SUCCESSFULLY!' : 'DOCTOR REGISTERED SUCCESSFULLY!');
         await fetchDoctors();
@@ -176,21 +175,21 @@ const DoctorRegistration = () => {
   });
 
   return (
-    <div className="page-shell">
-      <header className="page-header">
-        <div className="header-card">
-          <div className="header-row">
-            <div className="header-icon">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-semibold">
+      <header className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur p-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 rounded-3xl border-b-4 border-emerald-500 bg-white p-4 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)] md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-[0_10px_20px_-10px_rgba(14,165,164,0.6)]">
               <Stethoscope size={30} />
             </div>
             <div>
-              <h1 className="header-title">Doctor Onboarding</h1>
-              <p className="header-subtitle">Asha Hope Medical Records</p>
+              <h1 className="text-2xl font-bold tracking-tight">Doctor Onboarding</h1>
+              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-emerald-600">Asha Hope Medical Records</p>
             </div>
           </div>
 
           {showForm ? (
-            <div className="btn-secondary">
+            <div className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
               <ShieldCheck size={18} className="text-white/80" />
               ID: {formData.doctorId || 'SYNCING...'}
             </div>
@@ -198,7 +197,7 @@ const DoctorRegistration = () => {
             <button
               type="button"
               onClick={openAddForm}
-              className="btn-primary"
+              className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-6 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-600"
             >
               <Plus size={16} />
               ADD DOCTOR
@@ -208,11 +207,11 @@ const DoctorRegistration = () => {
       </header>
       <main className="px-6 pb-12">
         {!showForm ? (
-          <div className="card p-8">
+          <div className="mx-auto max-w-7xl rounded-[28px] border border-slate-200 bg-white p-8 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)]">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 border-b border-slate-100 pb-3">
               <div className="flex items-center gap-3">
-                <List className="text-[color:var(--brand-500)]" size={20} />
-                <h2 className="card-title">Registered Doctors List</h2>
+                <List className="text-emerald-500" size={20} />
+                <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-600">Registered Doctors List</h2>
               </div>
               <div className="relative w-full md:w-80">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -221,7 +220,7 @@ const DoctorRegistration = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by Doctor Name or ID"
-                  className="search-input"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 pl-10 text-[11px] font-bold uppercase tracking-wide outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
@@ -231,11 +230,11 @@ const DoctorRegistration = () => {
                 {doctors.length === 0 ? 'No doctors registered yet.' : 'No doctor found for this search.'}
               </div>
             ) : (
-              <div className="table-wrap">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
                 <div className="max-h-[540px] overflow-auto">
                 <table className="w-full min-w-[1050px]">
                   <thead>
-                    <tr className="table-head sticky top-0 z-10">
+                    <tr className="sticky top-0 z-10 bg-white text-left text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-600">
                       <th className="py-3">Doctor ID</th>
                       <th className="py-3">Name</th>
                       <th className="py-3">Department</th>
@@ -248,14 +247,14 @@ const DoctorRegistration = () => {
                   </thead>
                   <tbody>
                     {filteredDoctors.map((doctor) => (
-                      <tr key={doctor._id} className="table-row">
-                        <td className="py-3 font-semibold text-[color:var(--brand-600)]">{doctor.doctorId}</td>
+                      <tr key={doctor._id} className="border-b border-slate-100 text-[13px] font-bold text-slate-600">
+                        <td className="py-3 font-semibold text-emerald-600">{doctor.doctorId}</td>
                         <td className="py-3 font-semibold">{doctor.doctorName}</td>
                         <td className="py-3 font-semibold">{doctor.department}</td>
                         <td className="py-3 font-semibold">{doctor.specialization}</td>
                         <td className="py-3 font-semibold">{doctor.mobile}</td>
                         <td className="py-3">
-                          <span className={doctor.status === 'Active' ? 'badge-success' : 'badge-danger'}>
+                          <span className={doctor.status === 'Active' ? 'rounded-md bg-emerald-100 px-2 py-1 text-[10px] font-extrabold text-emerald-600' : 'rounded-md bg-rose-100 px-2 py-1 text-[10px] font-extrabold text-rose-600'}>
                             {doctor.status}
                           </span>
                         </td>
@@ -265,7 +264,7 @@ const DoctorRegistration = () => {
                             <button
                               type="button"
                               onClick={() => handleEdit(doctor)}
-                              className="icon-btn"
+                              className="rounded-xl bg-slate-100 p-2 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"
                               title="Edit"
                             >
                               <Edit size={16} />
@@ -273,7 +272,7 @@ const DoctorRegistration = () => {
                             <button
                               type="button"
                               onClick={() => handleDelete(doctor)}
-                              className="danger-btn"
+                              className="rounded-xl bg-rose-100 p-2 text-rose-600 transition hover:bg-rose-600 hover:text-white"
                               title="Delete"
                             >
                               <Trash2 size={16} />
@@ -289,16 +288,16 @@ const DoctorRegistration = () => {
             )}
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 card p-8 md:p-7 relative overflow-hidden">
+          <form onSubmit={handleSubmit} className="mx-auto grid max-w-7xl grid-cols-1 gap-8 lg:grid-cols-12">
+            <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-8 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)] md:p-7 lg:col-span-8">
               <div className="absolute -top-10 -right-10 opacity-5 pointer-events-none">
                 <Stethoscope size={250} className="text-slate-900" />
               </div>
 
               <div className="flex items-center justify-between mb-5 border-b border-slate-100 pb-2 relative z-10">
                 <div className="flex items-center gap-3">
-                  <User className="text-[color:var(--brand-500)]" size={20} />
-                  <h2 className="card-title">Personnel Details</h2>
+                  <User className="text-emerald-500" size={20} />
+                  <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-600">Personnel Details</h2>
                 </div>
                 <button
                   type="button"
@@ -319,13 +318,13 @@ const DoctorRegistration = () => {
                 <InputField label="Email Address" name="email" value={formData.email} onChange={handleChange} type="email" placeholder="doctor@asha.com" />
 
                 <div className="flex flex-col gap-2">
-                  <label className="field-label">Department</label>
+                  <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">Department</label>
                   <select
                     required
                     name="department"
                     value={formData.department}
                     onChange={handleChange}
-                    className="select-field uppercase"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none focus:border-emerald-500"
                   >
                     <option value="">-- SELECT DEPARTMENT --</option>
                     {departments.map((dept) => (
@@ -338,18 +337,18 @@ const DoctorRegistration = () => {
               </div>
             </div>
 
-            <div className="lg:col-span-4 space-y-6">
-              <div className="card p-8">
+            <div className="space-y-6 lg:col-span-4">
+              <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)]">
                 <div className="flex items-center gap-3 mb-2 border-b border-slate-100 pb-5">
-                  <CreditCard className="text-[color:var(--brand-500)]" size={20} />
-                  <h2 className="card-title">Revenue Share</h2>
+                  <CreditCard className="text-emerald-500" size={20} />
+                  <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-600">Revenue Share</h2>
                 </div>
 
                 <div className="space-y-4">
                   <InputField label="Fee (INR)" name="consultationFee" value={formData.consultationFee} onChange={handleChange} type="number" />
 
                   <div className="flex flex-col gap-3">
-                    <label className="field-label text-center">Payment Model</label>
+                    <label className="text-center text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">Payment Model</label>
                     <div className="flex p-1.5 bg-slate-50 rounded-2xl border border-slate-200">
                       {['Percentage', 'Fixed'].map(type => (
                         <button
@@ -357,7 +356,7 @@ const DoctorRegistration = () => {
                           type="button"
                           onClick={() => handleChange({ target: { name: 'revenueShareType', value: type } })}
                           className={`flex-1 py-3 rounded-xl text-[11px] font-semibold transition-all ${
-                            formData.revenueShareType === type ? 'bg-[color:var(--brand-500)] text-white shadow-md' : 'text-slate-500 hover:text-[color:var(--brand-600)]'
+                            formData.revenueShareType === type ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500 hover:text-emerald-600'
                           }`}
                         >
                           {type}
@@ -373,18 +372,18 @@ const DoctorRegistration = () => {
                 </div>
               </div>
 
-              <div className="bg-slate-900 rounded-[32px] p-8 shadow-xl text-white">
+              <div className="rounded-[32px] bg-slate-900 p-8 text-white shadow-xl">
                 <label className="text-[11px] font-semibold uppercase tracking-[0.3em] mb-6 block text-center opacity-60">Status</label>
 
                 <div className="flex gap-4 mb-8">
-                  <StatusBtn label="ACTIVE" value="Active" current={formData.status} onChange={handleChange} activeClass="bg-[color:var(--brand-500)]" />
+                  <StatusBtn label="ACTIVE" value="Active" current={formData.status} onChange={handleChange} activeClass="bg-emerald-500" />
                   <StatusBtn label="INACTIVE" value="Inactive" current={formData.status} onChange={handleChange} activeClass="bg-slate-700" />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-4 btn-primary justify-center active:scale-95 disabled:opacity-50"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-600 active:scale-95 disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin" /> : <Save size={22} />}
                   {editingDoctorId ? 'UPDATE DOCTOR' : 'REGISTER DOCTOR'}
@@ -400,11 +399,11 @@ const DoctorRegistration = () => {
 
 const InputField = ({ label, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="field-label">{label}</label>
+    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">{label}</label>
     <input
       required
       {...props}
-      className="input-field uppercase placeholder:font-semibold placeholder:text-slate-300"
+      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none placeholder:font-semibold placeholder:text-slate-300 focus:border-emerald-500"
     />
   </div>
 );
@@ -414,7 +413,7 @@ const StatusBtn = ({ label, value, current, onChange, activeClass }) => (
     type="button"
     onClick={() => onChange({ target: { name: 'status', value: value } })}
     className={`flex-1 py-3 rounded-xl text-[10px] font-semibold border border-slate-700 transition-all ${
-      current === value ? `${activeClass} text-white border-transparent shadow-lg` : 'text-black hover:text-white'
+      current === value ? `${activeClass} text-white border-transparent shadow-lg` : 'text-slate-200 hover:text-white'
     }`}
   >
     {label}

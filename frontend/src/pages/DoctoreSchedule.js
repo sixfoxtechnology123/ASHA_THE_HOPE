@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
 import toast from 'react-hot-toast';
-import { API_BASE_URL } from '../config/api';
+import { api } from '../config/api';
 import { CalendarDays, Plus, ArrowLeft, Save, Loader2, Search, Edit, Trash2, List } from 'lucide-react';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -25,6 +24,7 @@ const currentMonth = currentDate.getMonth() + 1;
 const currentYear = currentDate.getFullYear();
 
 const getInitialFormData = () => ({
+  scheduleId: '',
   doctorId: '',
   doctorName: '',
   month: currentMonth,
@@ -58,7 +58,7 @@ const DoctoreSchedule = () => {
 
   const fetchDoctors = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/doctors/all`);
+      const res = await api.get(`/doctors/all`);
       if (res.data.success) setDoctors(res.data.data || []);
     } catch (err) {
       toast.error('FAILED TO FETCH DOCTOR LIST');
@@ -67,10 +67,21 @@ const DoctoreSchedule = () => {
 
   const fetchSchedules = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/doctor-schedules/all`);
+      const res = await api.get(`/doctor-schedules/all`);
       if (res.data.success) setSchedules(res.data.data || []);
     } catch (err) {
       toast.error('FAILED TO FETCH SCHEDULES');
+    }
+  };
+
+  const fetchNextScheduleId = async () => {
+    try {
+      const res = await api.get(`/doctor-schedules/next-id`);
+      if (res.data.success) {
+        setFormData((prev) => ({ ...prev, scheduleId: res.data.nextId }));
+      }
+    } catch (err) {
+      toast.error('FAILED TO GENERATE SCHEDULE ID');
     }
   };
 
@@ -82,6 +93,7 @@ const DoctoreSchedule = () => {
   const openAddForm = () => {
     setEditingId(null);
     setFormData(getInitialFormData());
+    fetchNextScheduleId();
     setShowForm(true);
   };
 
@@ -116,6 +128,7 @@ const DoctoreSchedule = () => {
   const handleEdit = (item) => {
     setEditingId(item._id);
     setFormData({
+      scheduleId: item.scheduleId || '',
       doctorId: item.doctorId || '',
       doctorName: item.doctorName || '',
       month: item.month || currentMonth,
@@ -136,7 +149,7 @@ const DoctoreSchedule = () => {
     const ok = window.confirm(`Delete schedule for ${item.doctorName} (${item.doctorId})?`);
     if (!ok) return;
     try {
-      const res = await axios.delete(`${API_BASE_URL}/api/doctor-schedules/${item._id}`);
+      const res = await api.delete(`/doctor-schedules/${item._id}`);
       if (res.data.success) {
         toast.success('SCHEDULE DELETED');
         fetchSchedules();
@@ -163,8 +176,8 @@ const DoctoreSchedule = () => {
       };
 
       const res = editingId
-        ? await axios.put(`${API_BASE_URL}/api/doctor-schedules/update/${editingId}`, payload)
-        : await axios.post(`${API_BASE_URL}/api/doctor-schedules/create`, payload);
+        ? await api.put(`/doctor-schedules/update/${editingId}`, payload)
+        : await api.post(`/doctor-schedules/create`, payload);
 
       if (res.data.success) {
         toast.success(editingId ? 'SCHEDULE UPDATED' : 'SCHEDULE SAVED');
@@ -195,16 +208,16 @@ const DoctoreSchedule = () => {
   }, [schedules, searchTerm, monthFilter, yearFilter]);
 
   return (
-    <div className="page-shell">
-      <header className="page-header">
-        <div className="header-card">
-          <div className="header-row">
-            <div className="header-icon">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-semibold">
+      <header className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur p-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 rounded-3xl border-b-4 border-emerald-500 bg-white p-4 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)] md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-[0_10px_20px_-10px_rgba(14,165,164,0.6)]">
               <CalendarDays size={30} />
             </div>
             <div>
-              <h1 className="header-title">Doctor Schedule</h1>
-              <p className="header-subtitle">Month Wise Schedule Management</p>
+              <h1 className="text-2xl font-bold tracking-tight">Doctor Schedule</h1>
+              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-emerald-600">Month Wise Schedule Management</p>
             </div>
           </div>
 
@@ -212,7 +225,7 @@ const DoctoreSchedule = () => {
             <button
               type="button"
               onClick={openAddForm}
-              className="btn-primary"
+              className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-6 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-600"
             >
               <Plus size={16} />
               ADD SCHEDULE
@@ -221,7 +234,7 @@ const DoctoreSchedule = () => {
             <button
               type="button"
               onClick={closeForm}
-              className="btn-secondary"
+              className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white"
             >
               <ArrowLeft size={16} />
               BACK TO LIST
@@ -232,11 +245,11 @@ const DoctoreSchedule = () => {
 
       <main className="px-6 pb-12">
         {!showForm ? (
-          <div className="card p-8">
+          <div className="mx-auto max-w-7xl rounded-[28px] border border-slate-200 bg-white p-8 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)]">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 border-b border-slate-100 pb-3">
               <div className="flex items-center gap-3">
-                <List className="text-[color:var(--brand-500)]" size={20} />
-                <h2 className="card-title">Doctor Schedule List</h2>
+                <List className="text-emerald-500" size={20} />
+                <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-600">Doctor Schedule List</h2>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
                 <div className="relative w-full sm:w-72">
@@ -246,13 +259,13 @@ const DoctoreSchedule = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by doctor name or ID"
-                    className="search-input"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 pl-10 text-[11px] font-bold uppercase tracking-wide outline-none focus:border-emerald-500"
                   />
                 </div>
                 <select
                   value={monthFilter}
                   onChange={(e) => setMonthFilter(e.target.value)}
-                  className="select-field uppercase"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none focus:border-emerald-500"
                 >
                   {MONTHS.map((m) => (
                     <option key={m.value} value={String(m.value)}>{m.label}</option>
@@ -261,7 +274,7 @@ const DoctoreSchedule = () => {
                 <select
                   value={yearFilter}
                   onChange={(e) => setYearFilter(e.target.value)}
-                  className="select-field uppercase"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none focus:border-emerald-500"
                 >
                   {yearOptions.map((y) => (
                     <option key={y} value={String(y)}>{y}</option>
@@ -275,11 +288,12 @@ const DoctoreSchedule = () => {
                 {schedules.length === 0 ? 'No schedules saved yet.' : 'No schedule found for this filter.'}
               </div>
             ) : (
-              <div className="table-wrap">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
                 <div className="max-h-[540px] overflow-auto">
                   <table className="w-full min-w-[1220px]">
                     <thead>
-                      <tr className="table-head sticky top-0 z-10">
+                      <tr className="sticky top-0 z-10 bg-white text-left text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-600">
+                        <th className="py-3 px-3">Schedule ID</th>
                         <th className="py-3 px-3">Doctor ID</th>
                         <th className="py-3 px-3">Doctor Name</th>
                         <th className="py-3 px-3">Month-Year</th>
@@ -294,8 +308,9 @@ const DoctoreSchedule = () => {
                     </thead>
                     <tbody>
                       {filteredSchedules.map((item) => (
-                        <tr key={item._id} className="table-row">
-                          <td className="py-3 px-3 font-bold text-[color:var(--brand-600)]">{item.doctorId}</td>
+                        <tr key={item._id} className="border-b border-slate-100 text-[13px] font-bold text-slate-600">
+                          <td className="py-3 px-3 font-bold text-emerald-600">{item.scheduleId || '-'}</td>
+                          <td className="py-3 px-3 font-bold text-emerald-600">{item.doctorId}</td>
                           <td className="py-3 px-3">{item.doctorName}</td>
                           <td className="py-3 px-3">{MONTHS.find((m) => m.value === Number(item.month))?.label} {item.year}</td>
                           <td className="py-3 px-3">{(item.days || []).join(', ')}</td>
@@ -309,7 +324,7 @@ const DoctoreSchedule = () => {
                               <button
                                 type="button"
                                 onClick={() => handleEdit(item)}
-                                className="icon-btn"
+                                className="rounded-xl bg-slate-100 p-2 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"
                                 title="Edit"
                               >
                                 <Edit size={16} />
@@ -317,7 +332,7 @@ const DoctoreSchedule = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDelete(item)}
-                                className="danger-btn"
+                                className="rounded-xl bg-rose-100 p-2 text-rose-600 transition hover:bg-rose-600 hover:text-white"
                                 title="Delete"
                               >
                                 <Trash2 size={16} />
@@ -333,10 +348,11 @@ const DoctoreSchedule = () => {
             )}
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="max-w-7xl mx-auto space-y-6">
-            <div className="card p-6">
-              <h2 className="card-title mb-4">Month Wise Schedule (Fixed)</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="mx-auto max-w-7xl space-y-6">
+            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)]">
+              <h2 className="mb-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-600">Month Wise Schedule (Fixed)</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <InputField label="Schedule ID" name="scheduleId" value={formData.scheduleId} onChange={handleInputChange} readOnly />
                 <SelectField label="Month" name="month" value={formData.month} onChange={handleInputChange}>
                   {MONTHS.map((m) => (
                     <option key={m.value} value={m.value}>{m.label}</option>
@@ -350,9 +366,9 @@ const DoctoreSchedule = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-8 card p-6 space-y-6">
-                <h3 className="card-title">Doctor Availability</h3>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+              <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)] lg:col-span-8 space-y-6">
+                <h3 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-600">Doctor Availability</h3>
 
                 <SelectField label="Doctor Name" name="doctorId" value={formData.doctorId} onChange={handleInputChange}>
                   <option value="">-- SELECT DOCTOR --</option>
@@ -362,7 +378,7 @@ const DoctoreSchedule = () => {
                 </SelectField>
 
                 <div>
-                  <label className="field-label">Day Selection</label>
+                  <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">Day Selection</label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mt-3">
                     {DAYS.map((day) => (
                       <button
@@ -371,8 +387,8 @@ const DoctoreSchedule = () => {
                         onClick={() => toggleDay(day)}
                         className={`py-2 rounded-xl text-xs font-bold border transition-all ${
                           formData.days.includes(day)
-                            ? 'bg-[color:var(--brand-500)] text-white border-[color:var(--brand-500)]'
-                            : 'bg-white text-slate-600 border-slate-200 hover:border-[color:var(--brand-500)]'
+                            ? 'bg-emerald-500 text-white border-emerald-500'
+                            : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-500'
                         }`}
                       >
                         {day}
@@ -394,9 +410,9 @@ const DoctoreSchedule = () => {
                 </div>
               </div>
 
-              <div className="lg:col-span-4 space-y-6">
-                <div className="card p-6">
-                  <label className="field-label block mb-3">Booking Mode</label>
+              <div className="space-y-6 lg:col-span-4">
+                <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)]">
+                  <label className="mb-3 block text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">Booking Mode</label>
                   <div className="space-y-2">
                     {['Slot Based', 'FCFS', 'Hybrid'].map((mode) => (
                       <button
@@ -405,8 +421,8 @@ const DoctoreSchedule = () => {
                         onClick={() => setFormData((prev) => ({ ...prev, bookingMode: mode }))}
                         className={`w-full py-3 rounded-xl text-sm font-bold border transition-all ${
                           formData.bookingMode === mode
-                            ? 'bg-[color:var(--brand-500)] text-white border-[color:var(--brand-500)]'
-                            : 'bg-white text-slate-700 border-slate-200 hover:border-[color:var(--brand-500)]'
+                            ? 'bg-emerald-500 text-white border-emerald-500'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-500'
                         }`}
                       >
                         {mode}
@@ -415,11 +431,11 @@ const DoctoreSchedule = () => {
                   </div>
                 </div>
 
-                <div className="bg-slate-900 rounded-[28px] p-6 shadow-xl text-white">
+                <div className="rounded-[28px] bg-slate-900 p-6 text-white shadow-xl">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 btn-primary justify-center active:scale-95 disabled:opacity-50"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-600 active:scale-95 disabled:opacity-50"
                   >
                     {loading ? <Loader2 className="animate-spin" /> : <Save size={20} />}
                     {editingId ? 'UPDATE SCHEDULE' : 'SAVE SCHEDULE'}
@@ -436,22 +452,22 @@ const DoctoreSchedule = () => {
 
 const InputField = ({ label, required = true, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="field-label">{label}</label>
+    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">{label}</label>
     <input
       required={required}
       {...props}
-      className="input-field"
+      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none focus:border-emerald-500"
     />
   </div>
 );
 
 const SelectField = ({ label, children, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="field-label">{label}</label>
+    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">{label}</label>
     <select
       required
       {...props}
-      className="select-field uppercase"
+      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none focus:border-emerald-500"
     >
       {children}
     </select>

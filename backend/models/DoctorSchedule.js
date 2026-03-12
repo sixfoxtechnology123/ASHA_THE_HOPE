@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const doctorScheduleSchema = new mongoose.Schema(
   {
+    scheduleId: { type: String },
     doctorId: { type: String, required: true },
     doctorName: { type: String, required: true },
     month: { type: Number, required: true, min: 1, max: 12 },
@@ -28,5 +29,7 @@ const doctorScheduleSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+doctorScheduleSchema.index({ scheduleId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('DoctorSchedule', doctorScheduleSchema);

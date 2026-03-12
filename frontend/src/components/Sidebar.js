@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { UserCog, Activity, LogOut, Menu, X, Stethoscope, ChevronDown, ChevronRight, Layers, CalendarDays, UserPlus } from 'lucide-react';
+import { Activity, LogOut, Menu, Stethoscope, ChevronDown, ChevronRight, Layers, CalendarDays, UserPlus, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Sidebar = () => {
@@ -21,7 +21,11 @@ const Sidebar = () => {
       <Link
         to={path}
         onClick={() => setOpen(false)}
-        className={`sidebar-link ${isActive ? 'sidebar-link-active' : 'sidebar-link-inactive'}`}
+        className={`flex items-center gap-4 rounded-2xl px-5 py-3.5 text-sm font-bold transition ${
+          isActive
+            ? 'bg-emerald-500/15 text-white shadow-[0_20px_25px_-20px_rgba(14,165,164,0.6)]'
+            : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
+        }`}
       >
         <span className={isActive ? 'text-white' : 'text-slate-500'}>{icon}</span>
         {name}
@@ -32,8 +36,8 @@ const Sidebar = () => {
   return (
     <>
       {/* MOBILE BAR - Deep Charcoal */}
-      <div className="lg:hidden fixed top-0 inset-x-0 sidebar-shell h-16 flex items-center justify-between px-6 z-50 shadow-xl">
-        <span className="text-white font-bold tracking-tighter text-xl">ASHA HOPE</span>
+      <div className="fixed top-0 inset-x-0 z-50 flex h-16 items-center justify-between bg-slate-900 px-6 shadow-xl lg:hidden">
+        <span className="text-xl font-bold tracking-tighter text-white">ASHA HOPE</span>
         <button onClick={() => setOpen(true)} className="text-white bg-slate-800 p-2 rounded-lg">
           <Menu size={24} />
         </button>
@@ -41,18 +45,18 @@ const Sidebar = () => {
 
       {/* THE SIDEBAR */}
       <div className={`
-        fixed inset-y-0 left-0 w-64 sidebar-shell flex flex-col z-[60] transition-transform duration-300 border-r border-slate-900/40
+        fixed inset-y-0 left-0 z-[60] flex w-64 flex-col border-r border-slate-900/40 bg-slate-900 text-slate-200 transition-transform duration-300
         ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
       `}>
         {/* BRAND SECTION */}
         <div className="p-8">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl text-white shadow-lg shadow-emerald-500/20" style={{ background: 'var(--brand-500)' }}>
+            <div className="rounded-xl bg-emerald-500 p-2.5 text-white shadow-lg shadow-emerald-500/20">
               <Activity size={24} />
             </div>
             <div>
               <span className="text-white font-bold text-xl tracking-tighter block leading-none">ASHA HOPE</span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] mt-1 block" style={{ color: 'var(--brand-500)' }}>Healthcare</span>
+              <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">Healthcare</span>
             </div>
           </div>
         </div>
@@ -87,6 +91,7 @@ const Sidebar = () => {
               </Link> */}
                <Link 
                 to="/DepartmentList" 
+                onClick={() => setOpen(false)}
                 className={`ml-12 py-2.5 block text-xs font-bold transition-colors ${
                     location.pathname === '/DoctorSpecializationList' ? 'text-white' : 'text-slate-500 hover:text-white'
                 }`}
@@ -102,10 +107,11 @@ const Sidebar = () => {
           {navLink('/PatientsRegistration', 'Patients Registration', <UserPlus size={20} />)}
           {navLink('/DoctoreSchedule', 'Doctore Schedule', <CalendarDays size={20} />)}
           {navLink('/AppointmentBooking', 'Appointment Booking', <CalendarDays size={20} />)}
+          {navLink('/ConsultationBilling', 'Consultation Billing', <FileText size={20} />)}
         </nav>
 
         {/* LOGOUT SYSTEM */}
-        <div className="p-4 sidebar-panel">
+      <div className="bg-slate-800/80 p-4">
           <button 
             onClick={handleLogout} 
             className="w-full flex items-center justify-center gap-3 px-5 py-4 bg-slate-800/50 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest border border-slate-700/50"

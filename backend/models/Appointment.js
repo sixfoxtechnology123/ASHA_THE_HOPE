@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const appointmentSchema = new mongoose.Schema(
   {
+    appointmentId: { type: String },
     patientSearch: { type: String, default: '' },
     patientName: { type: String, default: '' },
     patientMobile: { type: String, default: '' },
@@ -21,6 +22,7 @@ const appointmentSchema = new mongoose.Schema(
 );
 
 appointmentSchema.index({ tokenNumber: 1 }, { unique: true });
+appointmentSchema.index({ appointmentId: 1 }, { unique: true, sparse: true });
 appointmentSchema.index({ doctorId: 1, appointmentDate: 1 });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);

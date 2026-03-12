@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
 import toast from 'react-hot-toast';
-import { API_BASE_URL } from '../config/api';
+import { api } from '../config/api';
 import { UserPlus, Save, Loader2, Plus, ArrowLeft, Search, List, Edit, Trash2 } from 'lucide-react';
 
 const getInitialFormData = () => ({
@@ -78,7 +77,7 @@ const PatientsRegistration = () => {
   const fetchNextPatientId = async () => {
     setLoadingId(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/patients/latest-id`);
+      const res = await api.get(`/patients/latest-id`);
       if (res.data.success) {
         setFormData((prev) => ({ ...prev, patientId: res.data.nextId }));
       }
@@ -96,7 +95,7 @@ const PatientsRegistration = () => {
   const fetchPatients = async () => {
     setLoadingList(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/patients/all`);
+      const res = await api.get(`/patients/all`);
       if (res.data.success) {
         setPatients(res.data.data || []);
       }
@@ -113,7 +112,7 @@ const PatientsRegistration = () => {
 
   const fetchDepartments = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/master/department/all`);
+      const res = await api.get(`/master/department/all`);
       if (res.data.success) {
         const deptList = res.data.data || [];
         setDepartments(deptList);
@@ -129,7 +128,7 @@ const PatientsRegistration = () => {
 
   const fetchDoctors = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/doctors/all`);
+      const res = await api.get(`/doctors/all`);
       if (res.data.success) {
         setDoctors(res.data.data || []);
       }
@@ -198,7 +197,7 @@ const PatientsRegistration = () => {
     const confirmed = window.confirm(`Delete ${patient.fullName} (${patient.patientId})?`);
     if (!confirmed) return;
     try {
-      const res = await axios.delete(`${API_BASE_URL}/api/patients/${patient._id}`);
+      const res = await api.delete(`/patients/${patient._id}`);
       if (res.data.success) {
         toast.success('PATIENT DELETED');
         await fetchPatients();
@@ -237,8 +236,8 @@ const PatientsRegistration = () => {
       };
 
       const res = isEditMode
-        ? await axios.put(`${API_BASE_URL}/api/patients/update/${editingPatientId}`, payload)
-        : await axios.post(`${API_BASE_URL}/api/patients/register`, payload);
+        ? await api.put(`/patients/update/${editingPatientId}`, payload)
+        : await api.post(`/patients/register`, payload);
       if (res.data.success) {
         toast.success(isEditMode ? `PATIENT UPDATED | ID ${res.data.data.patientId}` : `PATIENT REGISTERED | ID ${res.data.data.patientId}`);
         await fetchPatients();
@@ -272,7 +271,7 @@ const PatientsRegistration = () => {
     if (!patientMongoId) return;
     setLoadingHistory(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/patients/${patientMongoId}/${type}-history`);
+      const res = await api.get(`/patients/${patientMongoId}/${type}-history`);
       if (res.data.success) {
         if (type === 'visit') setVisitHistory(res.data.data || []);
         if (type === 'billing') setBillingHistory(res.data.data || []);
@@ -349,7 +348,7 @@ const PatientsRegistration = () => {
         status: visitForm.status,
         prescriptionUrl: visitForm.prescriptionUrl
       };
-      const res = await axios.post(`${API_BASE_URL}/api/patients/${selectedPatient._id}/visit-history`, payload);
+      const res = await api.post(`/patients/${selectedPatient._id}/visit-history`, payload);
       if (res.data.success) {
         toast.success('VISIT HISTORY SAVED');
         resetVisitForm();
@@ -379,7 +378,7 @@ const PatientsRegistration = () => {
         amount: billingForm.amount ? Number(billingForm.amount) : 0,
         paymentStatus: billingForm.paymentStatus
       };
-      const res = await axios.post(`${API_BASE_URL}/api/patients/${selectedPatient._id}/billing-history`, payload);
+      const res = await api.post(`/patients/${selectedPatient._id}/billing-history`, payload);
       if (res.data.success) {
         toast.success('BILLING HISTORY SAVED');
         resetBillingForm();
@@ -405,7 +404,7 @@ const PatientsRegistration = () => {
         medicinesPurchased: pharmacyForm.medicinesPurchased,
         amount: pharmacyForm.amount ? Number(pharmacyForm.amount) : 0
       };
-      const res = await axios.post(`${API_BASE_URL}/api/patients/${selectedPatient._id}/pharmacy-history`, payload);
+      const res = await api.post(`/patients/${selectedPatient._id}/pharmacy-history`, payload);
       if (res.data.success) {
         toast.success('PHARMACY HISTORY SAVED');
         resetPharmacyForm();
@@ -432,16 +431,16 @@ const PatientsRegistration = () => {
   ];
 
   return (
-    <div className="page-shell">
-      <header className="page-header">
-        <div className="header-card">
-          <div className="header-row">
-            <div className="header-icon">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-semibold">
+      <header className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur p-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 rounded-3xl border-b-4 border-emerald-500 bg-white p-4 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)] md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-[0_10px_20px_-10px_rgba(14,165,164,0.6)]">
               <UserPlus size={30} />
             </div>
             <div>
-              <h1 className="header-title">Patients Registration</h1>
-              <p className="header-subtitle">Create New Patient Profile</p>
+              <h1 className="text-2xl font-bold tracking-tight">Patients Registration</h1>
+              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-emerald-600">Create New Patient Profile</p>
             </div>
           </div>
 
@@ -449,7 +448,7 @@ const PatientsRegistration = () => {
             <button
               type="button"
               onClick={openAddForm}
-              className="btn-primary"
+              className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-6 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-600"
             >
               <Plus size={16} />
               ADD PATIENT
@@ -458,7 +457,7 @@ const PatientsRegistration = () => {
             <button
               type="button"
               onClick={closeForm}
-              className="btn-secondary"
+              className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white"
             >
               <ArrowLeft size={16} />
               BACK TO LIST
@@ -480,7 +479,7 @@ const PatientsRegistration = () => {
                     onClick={() => setActiveSection(tab.id)}
                     className={`px-4 py-2 rounded-2xl text-sm font-bold tracking-wide transition-all ${
                       isActive
-                        ? 'bg-[color:var(--brand-500)] text-white shadow-md'
+                        ? 'bg-emerald-500 text-white shadow-md'
                         : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
@@ -503,7 +502,7 @@ const PatientsRegistration = () => {
               <button
                 type="button"
                 onClick={() => setSelectedPatient(null)}
-                className="btn-ghost"
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600 transition hover:bg-slate-200"
               >
                 Clear Selection
               </button>
@@ -512,11 +511,11 @@ const PatientsRegistration = () => {
         )}
 
         {!isEditMode && !showForm ? (
-          <div className="card">
+          <div className="mx-auto max-w-7xl rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)]">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-3 border-b border-slate-100 pb-3">
               <div className="flex items-center gap-3">
-                <List className="text-[color:var(--brand-500)]" size={20} />
-                <h2 className="card-title">Patients List</h2>
+                <List className="text-emerald-500" size={20} />
+                <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-600">Patients List</h2>
               </div>
               <div className="relative w-full lg:w-80">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -525,23 +524,23 @@ const PatientsRegistration = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by name/mobile/patient id"
-                  className="search-input"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 pl-10 text-[11px] font-bold uppercase tracking-wide outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
 
             {loadingList ? (
               <div className="py-10 flex justify-center">
-                <Loader2 className="animate-spin text-[color:var(--brand-500)]" />
+                <Loader2 className="animate-spin text-emerald-500" />
               </div>
             ) : filteredPatients.length === 0 ? (
               <div className="py-12 text-center text-slate-500 font-bold uppercase">No patients found.</div>
             ) : (
-              <div className="table-wrap">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
                 <div className="max-h-[540px] overflow-auto">
                   <table className="w-full min-w-[900px]">
                     <thead>
-                      <tr className="table-head sticky top-0 z-10">
+                      <tr className="sticky top-0 z-10 bg-white text-left text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-600">
                         <th className="py-2 px-3">Patient ID</th>
                         <th className="py-2 px-3">Full Name</th>
                         <th className="py-2 px-3">Mobile</th>
@@ -554,12 +553,12 @@ const PatientsRegistration = () => {
                       {filteredPatients.map((patient) => (
                         <tr
                           key={patient._id}
-                          className={`table-row cursor-pointer ${
+                          className={`cursor-pointer border-b border-slate-100 text-[13px] font-bold text-slate-600 ${
                             selectedPatient?.patientId === patient.patientId ? 'bg-slate-50' : 'bg-white'
                           }`}
                           onClick={() => setSelectedPatient(patient)}
                         >
-                          <td className="py-2 px-3 font-bold text-[color:var(--brand-600)]">{patient.patientId}</td>
+                          <td className="py-2 px-3 font-bold text-emerald-600">{patient.patientId}</td>
                           <td className="py-2 px-3">{patient.fullName || '-'}</td>
                           <td className="py-2 px-3">{patient.mobileNumber || '-'}</td>
                           <td className="py-2 px-3">{patient.gender || '-'}</td>
@@ -572,7 +571,7 @@ const PatientsRegistration = () => {
                                   e.stopPropagation();
                                   handleEdit(patient);
                                 }}
-                                className="icon-btn"
+                                className="rounded-xl bg-slate-100 p-2 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"
                                 title="Edit patient"
                               >
                                 <Edit size={16} />
@@ -583,7 +582,7 @@ const PatientsRegistration = () => {
                                   e.stopPropagation();
                                   handleDelete(patient);
                                 }}
-                                className="danger-btn"
+                                className="rounded-xl bg-rose-100 p-2 text-rose-600 transition hover:bg-rose-600 hover:text-white"
                                 title="Delete patient"
                               >
                                 <Trash2 size={16} />
@@ -599,7 +598,7 @@ const PatientsRegistration = () => {
             )}
           </div>
         ) : activeSection === 'details' ? (
-        <form onSubmit={handleSubmit} className="card space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)]">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <InputField
               label="Patient ID (Auto)"
@@ -663,11 +662,11 @@ const PatientsRegistration = () => {
             <TextAreaField label="Notes" name="notes" value={formData.notes} onChange={handleChange} />
           </div>
 
-          <div className="bg-slate-900 rounded-[28px] p-6 shadow-xl text-white">
+          <div className="rounded-[28px] bg-slate-900 p-6 text-white shadow-xl">
             <button
               type="submit"
               disabled={saving || loadingId}
-              className="w-full py-2 btn-primary justify-center disabled:opacity-50"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-600 disabled:opacity-50"
             >
               {saving ? <Loader2 className="animate-spin" /> : <Save size={20} />}
               {isEditMode ? 'UPDATE PATIENT' : 'SAVE PATIENT'}
@@ -675,10 +674,10 @@ const PatientsRegistration = () => {
           </div>
         </form>
         ) : isEditMode && activeSection === 'visit' ? (
-          <div className="card">
+          <div className="mx-auto max-w-7xl rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)]">
             <div className="flex items-center gap-3 mb-3 border-b border-slate-100 pb-3">
-              <List className="text-[color:var(--brand-500)]" size={20} />
-              <h2 className="card-title">Visit History</h2>
+              <List className="text-emerald-500" size={20} />
+              <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-600">Visit History</h2>
             </div>
             <form onSubmit={submitVisitHistory} className="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
@@ -703,7 +702,7 @@ const PatientsRegistration = () => {
                 <InputField label="Prescription URL" name="prescriptionUrl" value={visitForm.prescriptionUrl} onChange={handleVisitChange} required={false} />
               </div>
               <div className="mt-3 flex justify-end">
-                <button type="submit" disabled={savingHistory} className="btn-primary disabled:opacity-60">
+                <button type="submit" disabled={savingHistory} className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-6 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-600 disabled:opacity-60">
                   {savingHistory ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                   SAVE VISIT
                 </button>
@@ -713,16 +712,16 @@ const PatientsRegistration = () => {
               historyEmptyState('Select a patient to view visit history')
             ) : loadingHistory ? (
               <div className="py-10 flex justify-center">
-                <Loader2 className="animate-spin text-[color:var(--brand-500)]" />
+                <Loader2 className="animate-spin text-emerald-500" />
               </div>
             ) : visitHistory.length === 0 ? (
               historyEmptyState('visit history')
             ) : (
-              <div className="table-wrap">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
                 <div className="max-h-[540px] overflow-auto">
                   <table className="w-full min-w-[900px]">
                     <thead>
-                      <tr className="table-head sticky top-0 z-10">
+                      <tr className="sticky top-0 z-10 bg-white text-left text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-600">
                         <th className="py-2 px-3">Visit Date</th>
                         <th className="py-2 px-3">Doctor</th>
                         <th className="py-2 px-3">Department</th>
@@ -732,7 +731,7 @@ const PatientsRegistration = () => {
                     </thead>
                     <tbody>
                       {visitHistory.map((item) => (
-                        <tr key={item._id} className="table-row">
+                        <tr key={item._id} className="border-b border-slate-100 text-[13px] font-bold text-slate-600">
                           <td className="py-2 px-3">{item.visitDate || '-'}</td>
                           <td className="py-2 px-3">{item.doctorName || doctorMap[item.doctorId]?.doctorName || '-'}</td>
                           <td className="py-2 px-3">{item.department || doctorMap[item.doctorId]?.department || '-'}</td>
@@ -740,7 +739,7 @@ const PatientsRegistration = () => {
                           <td className="py-2 px-3">
                             {item.prescriptionUrl ? (
                               <a
-                                className="text-[color:var(--brand-600)] hover:underline"
+                                className="text-emerald-600 hover:underline"
                                 href={item.prescriptionUrl}
                                 target="_blank"
                                 rel="noreferrer"
@@ -760,10 +759,10 @@ const PatientsRegistration = () => {
             )}
           </div>
         ) : isEditMode && activeSection === 'billing' ? (
-          <div className="card">
+          <div className="mx-auto max-w-7xl rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)]">
             <div className="flex items-center gap-3 mb-3 border-b border-slate-100 pb-3">
-              <List className="text-[color:var(--brand-500)]" size={20} />
-              <h2 className="card-title">Billing History</h2>
+              <List className="text-emerald-500" size={20} />
+              <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-600">Billing History</h2>
             </div>
             <form onSubmit={submitBillingHistory} className="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
@@ -789,7 +788,7 @@ const PatientsRegistration = () => {
                 </SelectField>
               </div>
               <div className="mt-3 flex justify-end">
-                <button type="submit" disabled={savingHistory} className="btn-primary disabled:opacity-60">
+                <button type="submit" disabled={savingHistory} className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-6 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-600 disabled:opacity-60">
                   {savingHistory ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                   SAVE BILL
                 </button>
@@ -799,16 +798,16 @@ const PatientsRegistration = () => {
               historyEmptyState('Select a patient to view billing history')
             ) : loadingHistory ? (
               <div className="py-10 flex justify-center">
-                <Loader2 className="animate-spin text-[color:var(--brand-500)]" />
+                <Loader2 className="animate-spin text-emerald-500" />
               </div>
             ) : billingHistory.length === 0 ? (
               historyEmptyState('billing history')
             ) : (
-              <div className="table-wrap">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
                 <div className="max-h-[540px] overflow-auto">
                   <table className="w-full min-w-[900px]">
                     <thead>
-                      <tr className="table-head sticky top-0 z-10">
+                      <tr className="sticky top-0 z-10 bg-white text-left text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-600">
                         <th className="py-2 px-3">Invoice No</th>
                         <th className="py-2 px-3">Date</th>
                         <th className="py-2 px-3">Amount</th>
@@ -821,7 +820,7 @@ const PatientsRegistration = () => {
                         const doctorFee = item.doctorId ? Number(doctorMap[item.doctorId]?.consultationFee || 0) : 0;
                         const finalAmount = amountValue > 0 ? amountValue : doctorFee;
                         return (
-                          <tr key={item._id} className="table-row">
+                          <tr key={item._id} className="border-b border-slate-100 text-[13px] font-bold text-slate-600">
                             <td className="py-2 px-3">{item.invoiceNo || '-'}</td>
                             <td className="py-2 px-3">{item.billDate || '-'}</td>
                             <td className="py-2 px-3">{finalAmount ? finalAmount.toFixed(2) : '-'}</td>
@@ -836,10 +835,10 @@ const PatientsRegistration = () => {
             )}
           </div>
         ) : isEditMode ? (
-          <div className="card">
+          <div className="mx-auto max-w-7xl rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)]">
             <div className="flex items-center gap-3 mb-3 border-b border-slate-100 pb-3">
-              <List className="text-[color:var(--brand-500)]" size={20} />
-              <h2 className="card-title">Pharmacy History</h2>
+              <List className="text-emerald-500" size={20} />
+              <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-600">Pharmacy History</h2>
             </div>
             <form onSubmit={submitPharmacyHistory} className="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -848,7 +847,7 @@ const PatientsRegistration = () => {
                 <InputField label="Amount" type="number" name="amount" value={pharmacyForm.amount} onChange={handlePharmacyChange} required={false} />
               </div>
               <div className="mt-3 flex justify-end">
-                <button type="submit" disabled={savingHistory} className="btn-primary disabled:opacity-60">
+                <button type="submit" disabled={savingHistory} className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-6 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-600 disabled:opacity-60">
                   {savingHistory ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                   SAVE PHARMACY
                 </button>
@@ -858,16 +857,16 @@ const PatientsRegistration = () => {
               historyEmptyState('Select a patient to view pharmacy history')
             ) : loadingHistory ? (
               <div className="py-10 flex justify-center">
-                <Loader2 className="animate-spin text-[color:var(--brand-500)]" />
+                <Loader2 className="animate-spin text-emerald-500" />
               </div>
             ) : pharmacyHistory.length === 0 ? (
               historyEmptyState('pharmacy history')
             ) : (
-              <div className="table-wrap">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
                 <div className="max-h-[540px] overflow-auto">
                   <table className="w-full min-w-[900px]">
                     <thead>
-                      <tr className="table-head sticky top-0 z-10">
+                      <tr className="sticky top-0 z-10 bg-white text-left text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-600">
                         <th className="py-2 px-3">Bill No</th>
                         <th className="py-2 px-3">Medicines Purchased</th>
                         <th className="py-2 px-3">Amount</th>
@@ -875,7 +874,7 @@ const PatientsRegistration = () => {
                     </thead>
                     <tbody>
                       {pharmacyHistory.map((item) => (
-                        <tr key={item._id} className="table-row">
+                        <tr key={item._id} className="border-b border-slate-100 text-[13px] font-bold text-slate-600">
                           <td className="py-2 px-3">{item.billNo || '-'}</td>
                           <td className="py-2 px-3">{item.medicinesPurchased || '-'}</td>
                           <td className="py-2 px-3">{Number(item.amount) ? Number(item.amount).toFixed(2) : '-'}</td>
@@ -895,22 +894,22 @@ const PatientsRegistration = () => {
 
 const InputField = ({ label, required = false, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="field-label">{label}</label>
+    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">{label}</label>
     <input
       required={required}
       {...props}
-      className="input-field disabled:bg-slate-50 disabled:text-slate-400 uppercase placeholder:normal-case"
+      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none placeholder:normal-case focus:border-emerald-500 disabled:bg-slate-50 disabled:text-slate-400"
     />
   </div>
 );
 
 const SelectField = ({ label, children, required = true, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="field-label">{label}</label>
+    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">{label}</label>
     <select
       required={required}
       {...props}
-      className="select-field uppercase"
+      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none focus:border-emerald-500"
     >
       {children}
     </select>
@@ -919,11 +918,11 @@ const SelectField = ({ label, children, required = true, ...props }) => (
 
 const TextAreaField = ({ label, ...props }) => (
   <div className="flex flex-col gap-2">
-    <label className="field-label">{label}</label>
+    <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-600">{label}</label>
     <textarea
       rows={4}
       {...props}
-      className="textarea-field uppercase"
+      className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase outline-none focus:border-emerald-500"
     />
   </div>
 );

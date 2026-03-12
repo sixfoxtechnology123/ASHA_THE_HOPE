@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../config/api';
+import { api } from '../config/api';
 import { Layers, Search, Trash2, Edit, Loader2, Plus, RefreshCw, X, Hash, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -19,9 +18,7 @@ const DoctorSpecializationList = () => {
   const fetchSpecializations = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/master/specialization/all`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await api.get(`/master/specialization/all`);
       if (res.data.success) {
         setSpecializations(res.data.data);
       }
@@ -38,9 +35,7 @@ const DoctorSpecializationList = () => {
   const handleAddNew = async () => {
     setEditId(null); // Ensure we are NOT in edit mode
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/master/specialization/latest`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await api.get(`/master/specialization/latest`);
       if (res.data.success) {
         setFormData({ specId: res.data.nextId, specName: '' });
         setIsModalOpen(true);
@@ -64,9 +59,7 @@ const DoctorSpecializationList = () => {
     try {
       // Use the 'upsert' route or choose based on editId
       const payload = editId ? { id: editId, ...formData } : formData;
-      const res = await axios.post(`${API_BASE_URL}/api/master/specialization/upsert`, payload, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await api.post(`/master/specialization/upsert`, payload);
 
       if (res.data.success) {
         toast.success(editId ? "RECORD UPDATED" : "RECORD SAVED");
@@ -84,9 +77,7 @@ const DoctorSpecializationList = () => {
   const handleDelete = async (id) => {
     if (window.confirm("ARE YOU SURE YOU WANT TO DELETE THIS?")) {
       try {
-        await axios.delete(`${API_BASE_URL}/api/master/specialization/${id}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        await api.delete(`/master/specialization/${id}`);
         toast.success("DELETED SUCCESSFULLY");
         fetchSpecializations();
       } catch (err) { toast.error("DELETE FAILED"); }

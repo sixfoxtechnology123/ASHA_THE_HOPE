@@ -5,10 +5,24 @@ const getNextTokenNumber = async () => {
   return last?.tokenNumber ? Number(last.tokenNumber) + 1 : 1;
 };
 
+const getNextAppointmentId = async () => {
+  const count = await Appointment.countDocuments();
+  return `AB-${count + 1}`;
+};
+
 exports.getAllAppointments = async (req, res) => {
   try {
     const data = await Appointment.find().sort({ createdAt: -1 });
     return res.json({ success: true, data });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getNextAppointmentId = async (req, res) => {
+  try {
+    const nextId = await getNextAppointmentId();
+    return res.json({ success: true, nextId });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -26,6 +40,8 @@ exports.getNextToken = async (req, res) => {
 exports.createAppointment = async (req, res) => {
   try {
     const payload = { ...req.body };
+
+    payload.appointmentId = payload.appointmentId || await getNextAppointmentId();
 
     if (payload.tokenAutoGenerate === 'Yes') {
       payload.tokenNumber = await getNextTokenNumber();
@@ -78,6 +94,8 @@ exports.updateAppointment = async (req, res) => {
     if (!existing) {
       return res.status(404).json({ success: false, message: 'APPOINTMENT NOT FOUND' });
     }
+
+    payload.appointmentId = existing.appointmentId;
 
     if (payload.bookingType === 'Slot' && !payload.selectedSlot) {
       return res.status(400).json({ success: false, message: 'SLOT REQUIRED FOR SLOT BOOKING' });

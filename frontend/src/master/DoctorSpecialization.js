@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../config/api';
+import { api } from '../config/api';
 import { Layers, Save, ShieldCheck, Loader2, RefreshCw, Hash } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -14,9 +13,7 @@ const DoctorSpecialization = () => {
   // Fetch the latest ID from the database to ensure SP sequence is correct
   const fetchLatestID = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/master/specialization/latest`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await api.get(`/master/specialization/latest`);
       if (res.data.success && res.data.lastId) {
         // Extract number from SP0001, increment, and re-format
         const lastNum = parseInt(res.data.lastId.replace('SP', ''));
@@ -42,11 +39,7 @@ const DoctorSpecialization = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/master/specialization`, formData, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await api.post(`/master/specialization/upsert`, formData);
 
       if (response.data.success) {
         toast.success("SPECIALIZATION SAVED SUCCESSFULLY");
