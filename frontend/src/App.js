@@ -17,6 +17,7 @@ import ConsultationBilling from "./pages/ConsultationBilling";
 import DoctorSpecialization from "./master/DoctorSpecialization";
 import DoctorSpecializationList from "./master/DoctorSpecializationList";
 import DepartmentList from "./pages/DepartmentList";
+import Prescription from "./pages/Prescription";
 
 export default function App() {
   const { user, loading } = useContext(AuthContext);
@@ -60,6 +61,7 @@ export default function App() {
                       <Route path="/DoctorSpecialization" element={<DoctorSpecialization />} />
                       <Route path="/DoctorSpecializationList" element={<DoctorSpecializationList />} />
                       <Route path="/DepartmentList" element={<DepartmentList/>} />
+                      <Route path="/Prescription" element={<Prescription/>} />
                       <Route path="*" element={<Navigate to="/DoctorRegistration" replace />} />
                     </Routes>
                   </div>

@@ -12,7 +12,7 @@ const appointmentRoutes = require('./routes/appointmentRoutes');
 const patientRoutes = require('./routes/patientRoutes');
 const { authenticate } = require('./utils/authMiddleware');
 const billingRoutes = require('./routes/ConsultationBillingRoutes');
-
+const prescriptionRoutes = require('./routes/prescriptionRoutes');
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -26,6 +26,7 @@ app.use('/api/doctor-schedules', authenticate, doctorScheduleRoutes);
 app.use('/api/appointments', authenticate, appointmentRoutes);
 app.use('/api/patients', authenticate, patientRoutes);
 app.use('/api/billing', authenticate, billingRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
 
 // DB Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/asha_hope')
