@@ -2,15 +2,16 @@ const Prescription = require('../models/Prescription');
 
 exports.getPrescriptions = async (req, res) => {
   try {
-    const data = await Prescription.find().populate('doctor patient').sort({ createdAt: -1 });
+    const data = await Prescription.find().sort({ createdAt: -1 });
     res.json({ success: true, data });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
 exports.getNextId = async (req, res) => {
   const { type } = req.query;
-  const count = await Prescription.countDocuments({ type });
-  const prefix = type === 'digital' ? 'DP' : 'HP';
+  const normalized = String(type || '').toLowerCase();
+  const count = await Prescription.countDocuments();
+  const prefix = normalized === 'digital' ? 'DP' : 'HP';
   res.json({ success: true, nextId: `${prefix}-${count + 1}` });
 };
 
